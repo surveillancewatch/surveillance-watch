@@ -1,0 +1,80 @@
+export const RESOURCE_CATEGORIES = [
+  {
+    title: 'Advocacy & Legal Organizations',
+    resources: [
+      {
+        icon: 'Shield',
+        color: 'blue',
+        name: 'ACLU of Washington',
+        description: 'Privacy & surveillance advocacy, legal assistance',
+        url: 'https://www.aclu-wa.org',
+        urlLabel: 'Visit Website',
+        phone: '(206) 624-2184',
+      },
+      {
+        icon: 'FileText',
+        color: 'green',
+        name: 'WA Attorney General',
+        description: 'Public records guidance, dispute resolution',
+        url: 'https://www.atg.wa.gov/open-government',
+        urlLabel: 'Public Records Resources',
+        phone: '(360) 753-6200',
+      },
+      {
+        icon: 'Users',
+        color: 'purple',
+        name: 'UW Human Rights Center',
+        description: 'Surveillance research, federal access report',
+        url: 'https://jsis.washington.edu/humanrights/',
+        urlLabel: 'Read the Report',
+        phone: null,
+      },
+    ],
+  },
+  {
+    title: 'Surveillance Research & Tools',
+    resources: [
+      {
+        icon: 'Shield',
+        color: 'red',
+        name: 'EFF: Mass Surveillance Technologies',
+        description: 'Comprehensive resource on surveillance tech used by government agencies',
+        url: 'https://www.eff.org/issues/mass-surveillance-technologies',
+        urlLabel: 'Explore Resources',
+        phone: null,
+      },
+      {
+        icon: 'Smartphone',
+        color: 'orange',
+        name: 'EFF RayHunter Project',
+        description: 'Open-source tool to detect cell-site simulators (Stingrays) in your area',
+        url: 'https://www.eff.org/deeplinks/2025/03/introducing-rayhunter',
+        urlLabel: 'Learn About RayHunter',
+        phone: null,
+      },
+      {
+        icon: 'Camera',
+        color: 'cyan',
+        name: 'Flock-You (ColonelPanicHacks)',
+        description: 'Open-source ALPR research and transparency tool',
+        url: 'https://github.com/colonelpanichacks/flock-you',
+        urlLabel: 'View on GitHub',
+        phone: null,
+      },
+    ],
+  },
+  {
+    title: 'Education & Investigations',
+    resources: [
+      {
+        icon: 'Eye',
+        color: 'red',
+        name: 'Benn Jordan',
+        description: 'In-depth video investigations into surveillance technology companies and their real-world impact on communities',
+        url: 'https://www.youtube.com/@BennJordan',
+        urlLabel: 'Watch on YouTube',
+        phone: null,
+      },
+    ],
+  },
+];

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronRight, ChevronLeft, Check, Download, AlertCircle, MapPin, Calendar, User, Building } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Check, Download, AlertCircle, MapPin, Calendar, User, Building, Mail, ExternalLink } from 'lucide-react';
 import { CONTACTS_DATA } from './contactsData.js';
 
 export default function FormWizard() {
@@ -223,17 +223,85 @@ Based on recent UW findings, many WA agencies may be unaware of federal access t
 `;
   };
 
+  const markdownToHtml = (md) => {
+    let html = md
+      // Escape HTML entities first
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Horizontal rules
+      .replace(/^---$/gm, '<hr/>')
+      // Headers
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<i>$1</i>')
+      // Numbered list items (with sub-items via indentation)
+      .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+      // Bullet list items (with sub-items via indentation)
+      .replace(/^   - (.+)$/gm, '<li style="margin-left:20px">$1</li>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      // Wrap consecutive <li> in <ul>
+      .replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+      // Line breaks: two trailing spaces or blank lines become breaks
+      .replace(/  $/gm, '<br/>')
+      // Paragraphs: wrap remaining non-tag lines
+      .replace(/^(?!<[huo1-9lr])((?!<).+)$/gm, '<p>$1</p>');
+
+    return html;
+  };
+
   const downloadRequest = () => {
-    const content = generateRequest();
-    const blob = new Blob([content], { type: 'text/markdown' });
+    const markdownContent = generateRequest();
+    const bodyHtml = markdownToHtml(markdownContent);
+
+    const wordDoc = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Public Records Request</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #222; max-width: 7in; margin: 0 auto; }
+  h1 { font-size: 18pt; margin-top: 12pt; margin-bottom: 6pt; }
+  h2 { font-size: 14pt; margin-top: 12pt; margin-bottom: 6pt; }
+  h3 { font-size: 12pt; margin-top: 10pt; margin-bottom: 4pt; }
+  p { margin: 6pt 0; }
+  ul { margin: 6pt 0; padding-left: 20pt; }
+  li { margin: 3pt 0; }
+  hr { border: none; border-top: 1px solid #999; margin: 12pt 0; }
+  b { font-weight: bold; }
+</style>
+</head>
+<body>
+${bodyHtml}
+</body>
+</html>`;
+
+    const blob = new Blob([wordDoc], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Public_Records_Request_${formData.selectedAgency?.City}_${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `Public_Records_Request_${formData.selectedAgency?.City}_${new Date().toISOString().split('T')[0]}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const isEmailAddress = (str) => str && str.includes('@') && !str.startsWith('http');
+
+  const sendViaEmail = () => {
+    const subject = encodeURIComponent(
+      `Public Records Request - Surveillance Camera Systems - ${formData.agencyName}`
+    );
+    const plainText = generateRequest();
+    const truncated = plainText.length > 1800
+      ? plainText.substring(0, 1800) + '\n\n--- Full request attached as Word document ---'
+      : plainText;
+    const body = encodeURIComponent(truncated);
+    window.location.href = `mailto:${formData.agencyEmail}?subject=${subject}&body=${body}`;
   };
 
   const isStepComplete = (step) => {
@@ -727,13 +795,43 @@ Based on recent UW findings, many WA agencies may be unaware of federal access t
                   Download Your Request
                 </button>
 
+                {isEmailAddress(formData.agencyEmail) ? (
+                  <button
+                    onClick={sendViaEmail}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition flex items-center justify-center"
+                  >
+                    <Mail className="w-5 h-5 mr-2" />
+                    Send via Email to {formData.agencyName}
+                  </button>
+                ) : formData.agencyPortal ? (
+                  <a
+                    href={formData.agencyPortal}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition flex items-center justify-center"
+                  >
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Open Records Portal for {formData.agencyName}
+                  </a>
+                ) : null}
+
+                {isEmailAddress(formData.agencyEmail) && (
+                  <p className="text-xs text-gray-400 text-center -mt-2">
+                    Opens your email app with the request pre-filled. Attach the downloaded Word document for best results.
+                  </p>
+                )}
+
                 <div className="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4">
                   <div className="font-semibold text-blue-400 mb-2">Next Steps:</div>
                   <ol className="list-decimal list-inside text-sm text-gray-300 space-y-1">
                     <li>Download your customized request using the button above</li>
+                    {isEmailAddress(formData.agencyEmail) ? (
+                      <li>Click "Send via Email" or open your email app manually</li>
+                    ) : (
+                      <li>Open the .doc file in Word, Google Docs, or LibreOffice</li>
+                    )}
                     <li>Review the document and make any final adjustments</li>
-                    <li>Save the file as a PDF</li>
-                    <li>Email it to: <span className="font-mono text-blue-400">{formData.agencyEmail}</span></li>
+                    <li>Submit to: <span className="font-mono text-blue-400">{formData.agencyEmail}</span></li>
                     <li>Keep a copy for your records and note the submission date</li>
                     <li>The agency must respond within 5 business days</li>
                   </ol>
