@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OUI-spy-TOO — Surveillance Device Detector | WA Surveillance Watch</title>
+  <meta name="description" content="An open-source ESP32 scanner that detects Flock cameras, ALPRs, and surveillance devices via BLE and WiFi. We spy too." />
+  <link rel="icon" href="/eye-icon.svg" type="image/svg+xml" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white min-h-screen">
+
+  <!-- ============================================================ -->
+  <!-- NAV -->
+  <!-- ============================================================ -->
+  <nav class="relative z-10 container mx-auto px-6 py-4 flex justify-between items-center">
+    <a href="/" class="flex items-center space-x-2 hover:opacity-80 transition">
+      <svg class="w-8 h-8 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span class="text-xl font-bold">WA Surveillance Watch</span>
+    </a>
+    <div class="hidden md:flex space-x-6 text-sm">
+      <a href="#features" class="hover:text-blue-300 transition">Features</a>
+      <a href="#devices" class="hover:text-blue-300 transition">Devices</a>
+      <a href="#how-it-works" class="hover:text-blue-300 transition">How It Works</a>
+      <a href="#hardware" class="hover:text-blue-300 transition">Hardware</a>
+      <a href="#integrations" class="hover:text-blue-300 transition">Integrations</a>
+    </div>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- HERO -->
+  <!-- ============================================================ -->
+  <header class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-black opacity-30"></div>
+    <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%), radial-gradient(circle at 80% 80%, rgba(74, 144, 226, 0.3), transparent 50%)"></div>
+
+    <div class="relative z-10 container mx-auto px-6 py-20 md:py-32">
+      <div class="max-w-4xl">
+        <div class="inline-block bg-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-6">
+          OPEN SOURCE ESP32 PROJECT
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+          We Spy Too.
+        </h1>
+        <p class="text-xl md:text-2xl mb-4 text-gray-300">
+          An ESP32-based surveillance device detector that finds Flock cameras, ALPRs, and hidden surveillance tech using BLE &amp; WiFi scanning.
+        </p>
+        <p class="text-lg mb-8 text-gray-400">
+          Passive. Receive-only. ~$5 hardware. No app store needed.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a
+            href="https://github.com/jeff-is-working/oui-spy-too"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition transform hover:scale-105 flex items-center justify-center"
+          >
+            <!-- GitHub icon -->
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+          <a
+            href="#how-it-works"
+            class="bg-white bg-opacity-10 hover:bg-opacity-20 border-2 border-white px-8 py-4 rounded-lg font-semibold text-lg transition"
+          >
+            How It Works
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-slate-900 to-transparent"></div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- WHAT IT DOES — 4 FEATURE CARDS -->
+  <!-- ============================================================ -->
+  <section id="features" class="bg-slate-900 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">What It Does</h2>
+      <p class="text-gray-300 text-center text-lg mb-12 max-w-2xl mx-auto">
+        Turn a $5 ESP32 into a portable surveillance device detector.
+      </p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Card 1: BLE/WiFi Scanning -->
+        <div class="bg-slate-800 p-6 rounded-xl border-2 border-blue-500">
+          <div class="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">BLE &amp; WiFi Scanning</h3>
+          <p class="text-gray-300 text-sm">Dual-protocol scanning detects surveillance devices by matching MAC address OUI prefixes against a database of known vendors.</p>
+        </div>
+
+        <!-- Card 2: LED Proximity Alerts -->
+        <div class="bg-slate-800 p-6 rounded-xl border-2 border-red-500">
+          <div class="w-12 h-12 bg-red-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 15l6-12 6 12"/>
+              <path d="M12 3v12"/>
+              <circle cx="12" cy="19" r="2"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">LED Proximity Alerts</h3>
+          <p class="text-gray-300 text-sm">Built-in LED flashes based on RSSI signal strength &mdash; rapid red when close, slow pulse when distant. No extra hardware needed.</p>
+        </div>
+
+        <!-- Card 3: PWA Dashboard -->
+        <div class="bg-slate-800 p-6 rounded-xl border-2 border-purple-500">
+          <div class="w-12 h-12 bg-purple-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">PWA Dashboard</h3>
+          <p class="text-gray-300 text-sm">Install the web interface on your phone &mdash; no app store required. Real-time device list, GPS tagging, and configuration from any browser.</p>
+        </div>
+
+        <!-- Card 4: GeoJSON Export -->
+        <div class="bg-slate-800 p-6 rounded-xl border-2 border-green-500">
+          <div class="w-12 h-12 bg-green-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+              <line x1="8" y1="2" x2="8" y2="18"/>
+              <line x1="16" y1="6" x2="16" y2="22"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">GeoJSON &amp; CSV Export</h3>
+          <p class="text-gray-300 text-sm">Export geotagged detections as GeoJSON for mapping or CSV for analysis. Visualize on geojson.io or contribute to DeFlock.me.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- SUPPORTED DEVICES -->
+  <!-- ============================================================ -->
+  <section id="devices" class="bg-slate-800 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">Supported Devices</h2>
+      <p class="text-gray-300 text-center text-lg mb-12 max-w-2xl mx-auto">
+        Detects 20+ surveillance vendors via OUI (MAC address prefix) matching.
+      </p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <!-- Each vendor tile -->
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-red-500 transition">
+          <p class="font-semibold text-red-400">Flock Safety</p>
+          <p class="text-xs text-gray-400 mt-1">LPR / ALPR</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-red-500 transition">
+          <p class="font-semibold text-red-400">Hikvision</p>
+          <p class="text-xs text-gray-400 mt-1">IP Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-red-500 transition">
+          <p class="font-semibold text-red-400">Dahua</p>
+          <p class="text-xs text-gray-400 mt-1">IP Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-red-500 transition">
+          <p class="font-semibold text-red-400">Verkada</p>
+          <p class="text-xs text-gray-400 mt-1">Cloud Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-orange-500 transition">
+          <p class="font-semibold text-orange-400">Ring / Amazon</p>
+          <p class="text-xs text-gray-400 mt-1">Doorbells &amp; Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-orange-500 transition">
+          <p class="font-semibold text-orange-400">Nest / Google</p>
+          <p class="text-xs text-gray-400 mt-1">Security Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-orange-500 transition">
+          <p class="font-semibold text-orange-400">Arlo</p>
+          <p class="text-xs text-gray-400 mt-1">Wireless Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-orange-500 transition">
+          <p class="font-semibold text-orange-400">Wyze</p>
+          <p class="text-xs text-gray-400 mt-1">Budget Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-blue-500 transition">
+          <p class="font-semibold text-blue-400">Axis</p>
+          <p class="text-xs text-gray-400 mt-1">Professional Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-blue-500 transition">
+          <p class="font-semibold text-blue-400">Motorola</p>
+          <p class="text-xs text-gray-400 mt-1">ALPR Systems</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-blue-500 transition">
+          <p class="font-semibold text-blue-400">Genetec</p>
+          <p class="text-xs text-gray-400 mt-1">Security Platforms</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-blue-500 transition">
+          <p class="font-semibold text-blue-400">Bosch</p>
+          <p class="text-xs text-gray-400 mt-1">Security Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-yellow-500 transition">
+          <p class="font-semibold text-yellow-400">Ubiquiti</p>
+          <p class="text-xs text-gray-400 mt-1">Network Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-yellow-500 transition">
+          <p class="font-semibold text-yellow-400">Redflex</p>
+          <p class="text-xs text-gray-400 mt-1">Traffic Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-yellow-500 transition">
+          <p class="font-semibold text-yellow-400">DJI</p>
+          <p class="text-xs text-gray-400 mt-1">Drones (RemoteID)</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-purple-500 transition">
+          <p class="font-semibold text-purple-400">Hanwha</p>
+          <p class="text-xs text-gray-400 mt-1">Security Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-purple-500 transition">
+          <p class="font-semibold text-purple-400">Pelco</p>
+          <p class="text-xs text-gray-400 mt-1">Security Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-purple-500 transition">
+          <p class="font-semibold text-purple-400">Amcrest</p>
+          <p class="text-xs text-gray-400 mt-1">IP Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-purple-500 transition">
+          <p class="font-semibold text-purple-400">Eufy / Anker</p>
+          <p class="text-xs text-gray-400 mt-1">Security Cameras</p>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center hover:border-purple-500 transition">
+          <p class="font-semibold text-purple-400">Vivotek</p>
+          <p class="text-xs text-gray-400 mt-1">IP Cameras</p>
+        </div>
+      </div>
+
+      <p class="text-gray-400 text-center text-sm mt-6">
+        Custom OUIs can be added to the firmware &mdash;
+        <a href="https://github.com/jeff-is-working/oui-spy-too#adding-new-ouis" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition">see the docs</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- HOW IT WORKS — 3 STEPS -->
+  <!-- ============================================================ -->
+  <section id="how-it-works" class="bg-slate-900 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">How It Works</h2>
+      <p class="text-gray-300 text-center text-lg mb-12 max-w-2xl mx-auto">
+        From unboxing to detecting surveillance devices in three steps.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Step 1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">1</div>
+          <h3 class="text-2xl font-bold mb-3">Flash the ESP32</h3>
+          <p class="text-gray-300">Upload the firmware using Arduino IDE or PlatformIO. Select your board, set partition scheme to <span class="text-blue-400 font-mono text-sm">"Default 4MB with spiffs"</span>, and flash.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">2</div>
+          <h3 class="text-2xl font-bold mb-3">Connect to the AP</h3>
+          <p class="text-gray-300">Power on the ESP32. Join WiFi network <span class="text-purple-400 font-mono text-sm">"OUI-spy-TOO"</span> and open <span class="text-purple-400 font-mono text-sm">192.168.4.1</span> in your browser. Install as a PWA on your phone.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">3</div>
+          <h3 class="text-2xl font-bold mb-3">Detect &amp; Export</h3>
+          <p class="text-gray-300">Grant location permission. Surveillance devices appear in real time. Export as GeoJSON or CSV to map them on DeFlock.me, geojson.io, or Ushahidi.</p>
+        </div>
+      </div>
+
+      <!-- LED table -->
+      <div class="mt-16 max-w-2xl mx-auto">
+        <h3 class="text-xl font-bold text-center mb-6">LED Behavior</h3>
+        <div class="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-700 text-gray-300">
+              <tr>
+                <th class="px-6 py-3">Pattern</th>
+                <th class="px-6 py-3">Meaning</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-300 divide-y divide-slate-700">
+              <tr><td class="px-6 py-3"><span class="text-green-400">Slow pulse (green)</span></td><td class="px-6 py-3">Idle, scanning</td></tr>
+              <tr><td class="px-6 py-3"><span class="text-blue-400">Blue flash</span></td><td class="px-6 py-3">Active BLE scan</td></tr>
+              <tr><td class="px-6 py-3"><span class="text-red-400">Rapid red flash</span></td><td class="px-6 py-3">Surveillance device very close</td></tr>
+              <tr><td class="px-6 py-3"><span class="text-red-400">Medium red flash</span></td><td class="px-6 py-3">Device at medium range</td></tr>
+              <tr><td class="px-6 py-3"><span class="text-red-400">Slow red flash</span></td><td class="px-6 py-3">Device detected (far)</td></tr>
+              <tr><td class="px-6 py-3"><span class="text-purple-400">Rainbow sequence</span></td><td class="px-6 py-3">Startup (RGB LED boards)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- HARDWARE -->
+  <!-- ============================================================ -->
+  <section id="hardware" class="bg-slate-800 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">Hardware</h2>
+      <p class="text-gray-300 text-center text-lg mb-12 max-w-2xl mx-auto">
+        Any ESP32 board works. No soldering, no external components, no special hardware.
+      </p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <h3 class="text-lg font-bold mb-1">ESP32</h3>
+          <p class="text-gray-400 text-sm mb-3">Classic dual-core, WiFi + BLE</p>
+          <span class="text-green-400 font-semibold text-sm">~$5&ndash;8</span>
+        </div>
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <h3 class="text-lg font-bold mb-1">ESP32-S2</h3>
+          <p class="text-gray-400 text-sm mb-3">Single-core, WiFi only</p>
+          <span class="text-green-400 font-semibold text-sm">~$4&ndash;7</span>
+        </div>
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <h3 class="text-lg font-bold mb-1">ESP32-S3</h3>
+          <p class="text-gray-400 text-sm mb-3">Dual-core, WiFi + BLE 5.0, RGB LED</p>
+          <span class="text-green-400 font-semibold text-sm">~$7&ndash;12</span>
+        </div>
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <h3 class="text-lg font-bold mb-1">ESP32-C3</h3>
+          <p class="text-gray-400 text-sm mb-3">RISC-V single-core, WiFi + BLE 5.0</p>
+          <span class="text-green-400 font-semibold text-sm">~$4&ndash;6</span>
+        </div>
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <h3 class="text-lg font-bold mb-1">ESP32-C6</h3>
+          <p class="text-gray-400 text-sm mb-3">RISC-V, WiFi 6 + BLE 5.0 + Thread</p>
+          <span class="text-green-400 font-semibold text-sm">~$6&ndash;10</span>
+        </div>
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-green-500 transition">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="text-lg font-bold">+ External Antenna</h3>
+            <span class="bg-blue-900 text-blue-200 text-xs px-2 py-0.5 rounded-full">Optional</span>
+          </div>
+          <p class="text-gray-400 text-sm mb-3">Extended detection range</p>
+          <span class="text-green-400 font-semibold text-sm">~$2&ndash;5</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- INTEGRATIONS -->
+  <!-- ============================================================ -->
+  <section id="integrations" class="bg-slate-900 py-20">
+    <div class="container mx-auto px-6">
+      <h2 class="text-4xl md:text-5xl font-bold text-center mb-4">Integrations</h2>
+      <p class="text-gray-300 text-center text-lg mb-12 max-w-2xl mx-auto">
+        Export your detections and contribute to the broader surveillance transparency ecosystem.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- DeFlock -->
+        <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 hover:border-blue-500 transition">
+          <div class="w-12 h-12 bg-blue-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">DeFlock.me</h3>
+          <p class="text-gray-300 text-sm mb-4">Contribute camera locations to the crowdsourced ALPR camera map. Export GeoJSON from OUI-spy-TOO and upload directly.</p>
+          <a href="https://deflock.me" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 text-sm flex items-center transition">
+            Visit DeFlock.me
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+        <!-- Ushahidi -->
+        <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 hover:border-purple-500 transition">
+          <div class="w-12 h-12 bg-purple-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Ushahidi</h3>
+          <p class="text-gray-300 text-sm mb-4">Self-host your own surveillance mapping platform. Create surveys, submit detections via API, and manage community reports.</p>
+          <a href="https://github.com/ushahidi/platform" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 text-sm flex items-center transition">
+            Ushahidi Platform
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+        <!-- OpenStreetMap -->
+        <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 hover:border-green-500 transition">
+          <div class="w-12 h-12 bg-green-900 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-7 h-7 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+              <line x1="8" y1="2" x2="8" y2="18"/>
+              <line x1="16" y1="6" x2="16" y2="22"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-2">OpenStreetMap</h3>
+          <p class="text-gray-300 text-sm mb-4">DeFlock feeds surveillance camera data into OpenStreetMap. Your detections help build a public, open map of surveillance infrastructure.</p>
+          <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:text-green-300 text-sm flex items-center transition">
+            OpenStreetMap.org
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- GET STARTED CTA -->
+  <!-- ============================================================ -->
+  <section class="py-20 bg-gradient-to-r from-blue-900 to-purple-900">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-4xl md:text-5xl font-bold mb-6">Get Started</h2>
+      <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+        Grab an ESP32, flash the firmware, and start mapping surveillance infrastructure in your community.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="https://github.com/jeff-is-working/oui-spy-too"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition transform hover:scale-105 flex items-center justify-center"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub Repository
+        </a>
+        <a
+          href="https://github.com/jeff-is-working/oui-spy-too#quick-start"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bg-white bg-opacity-10 hover:bg-opacity-20 border-2 border-white px-8 py-4 rounded-lg font-semibold text-lg transition flex items-center justify-center"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Setup Guide
+        </a>
+      </div>
+      <p class="text-gray-400 text-sm mt-8">
+        Based on <a href="https://github.com/colonelpanichacks/oui-spy" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 transition">OUI-SPY</a> by colonelpanichacks &mdash; GPL-3.0 License
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================================ -->
+  <footer class="bg-black py-8">
+    <div class="container mx-auto px-6 text-center text-gray-400 text-sm">
+      <p class="mb-2">
+        OUI-spy-TOO is for educational and security research purposes only. This is a passive, receive-only scanner.
+      </p>
+      <p class="mb-4">
+        Detecting wireless devices in public spaces is generally legal. Check local laws before use.
+      </p>
+
+      <div class="mb-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="mailto:wasurveillancewatch@proton.me"
+          class="text-blue-400 hover:text-blue-300 flex items-center transition"
+        >
+          <!-- Mail icon -->
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          wasurveillancewatch@proton.me
+        </a>
+        <span class="hidden sm:inline text-gray-600">|</span>
+        <a
+          href="https://github.com/jeff-is-working/oui-spy-too/issues/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-400 hover:text-gray-300 flex items-center transition"
+        >
+          <!-- ExternalLink icon -->
+          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Report an Issue
+        </a>
+      </div>
+
+      <p class="text-xs text-gray-500">
+        A project of <a href="/" class="text-gray-400 hover:text-gray-300 transition">WA Surveillance Watch</a> &mdash; Circle 6 Consulting
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
