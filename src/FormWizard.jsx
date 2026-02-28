@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronRight, ChevronLeft, Check, Download, AlertCircle, MapPin, Calendar, User, Building, Mail, ExternalLink } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Check, Download, AlertCircle, MapPin, Calendar, User, Building, Mail, ExternalLink, Info } from 'lucide-react';
 import { CONTACTS_DATA } from './contactsData.js';
 
 export default function FormWizard() {
@@ -36,30 +36,80 @@ export default function FormWizard() {
     includeFederalAccess: true,
   });
 
-  // Search and filter agencies
+  // Filter agencies by type first, then by search term
   const filteredAgencies = useMemo(() => {
-    if (!searchTerm) return CONTACTS_DATA;
+    // Filter by agency type
+    let typeFiltered;
+    if (formData.agencyType === "Sheriff's Office") {
+      // County-level entries only
+      typeFiltered = CONTACTS_DATA.filter(a => a.Notes === 'County Public Records');
+    } else {
+      // Police Department and City/Town: city/town entries (exclude county and tribal)
+      typeFiltered = CONTACTS_DATA.filter(a => a.Notes !== 'County Public Records' && a.County !== 'Tribal');
+    }
+
+    if (!searchTerm) return typeFiltered;
     const term = searchTerm.toLowerCase();
-    return CONTACTS_DATA.filter(agency => 
+
+    if (formData.agencyType === "Sheriff's Office") {
+      // Search by county name for sheriff mode
+      return typeFiltered.filter(agency =>
+        agency.County.toLowerCase().includes(term) ||
+        agency.Email.toLowerCase().includes(term)
+      );
+    }
+
+    return typeFiltered.filter(agency =>
       agency.City.toLowerCase().includes(term) ||
       agency.County.toLowerCase().includes(term) ||
       agency.Email.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, formData.agencyType]);
 
   const handleAgencySelect = (agency) => {
+    let agencyName;
+    if (formData.agencyType === "Sheriff's Office") {
+      agencyName = `${agency.County} County Sheriff's Office`;
+    } else if (formData.agencyType === 'Police Department') {
+      agencyName = `${agency.City} Police Department`;
+    } else {
+      // City/Town
+      const isTown = agency.Notes && agency.Notes.toLowerCase().includes('town');
+      agencyName = isTown ? `Town of ${agency.City}` : `City of ${agency.City}`;
+    }
+
     setFormData({
       ...formData,
       selectedAgency: agency,
-      agencyName: `${agency.City} ${formData.agencyType}`,
+      agencyName,
       agencyEmail: agency.Email,
       agencyPortal: agency['Portal URL'] || '',
     });
   };
 
   const updateFormData = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    if (field === 'agencyType') {
+      // Clear selection and search when agency type changes
+      setSearchTerm('');
+      setFormData({ ...formData, [field]: value, selectedAgency: null, agencyName: '', agencyEmail: '', agencyPortal: '' });
+    } else {
+      setFormData({ ...formData, [field]: value });
+    }
   };
+
+  // Check if selected agency is a small town that may not have its own PD
+  const isSmallTownEntry = formData.selectedAgency &&
+    formData.agencyType === 'Police Department' &&
+    ['Town Hall', 'Town Clerk', 'General Contact', 'City Hall'].includes(formData.selectedAgency.Notes);
+
+  // Find matching county sheriff entry for suggestion
+  const countySheriffEntry = useMemo(() => {
+    if (!isSmallTownEntry || !formData.selectedAgency) return null;
+    return CONTACTS_DATA.find(a =>
+      a.Notes === 'County Public Records' &&
+      a.County === formData.selectedAgency.County
+    );
+  }, [isSmallTownEntry, formData.selectedAgency?.County]);
 
   const addCameraLocation = () => {
     setFormData({
@@ -110,15 +160,15 @@ export default function FormWizard() {
       : generateComprehensiveTemplate();
 
     return templateContent
-      .replace('[INSERT DATE]', today)
-      .replace('[POLICE DEPARTMENT NAME]', formData.agencyName)
-      .replace('[DEPARTMENT EMAIL]', formData.agencyEmail)
-      .replace(/\[DEPARTMENT NAME\]/g, formData.agencyName)
-      .replace('[YOUR NAME]', formData.userName)
-      .replace('[YOUR EMAIL]', formData.userEmail)
-      .replace('[YOUR PHONE]', formData.userPhone)
-      .replace('[CAMERA LOCATIONS]', locationsText)
-      .replace('[DATE RANGE]', dateRangeText);
+      .replaceAll('[INSERT DATE]', today)
+      .replaceAll('[POLICE DEPARTMENT NAME]', formData.agencyName)
+      .replaceAll('[DEPARTMENT EMAIL]', formData.agencyEmail)
+      .replaceAll('[DEPARTMENT NAME]', formData.agencyName)
+      .replaceAll('[YOUR NAME]', formData.userName)
+      .replaceAll('[YOUR EMAIL]', formData.userEmail)
+      .replaceAll('[YOUR PHONE]', formData.userPhone || '(not provided)')
+      .replaceAll('[CAMERA LOCATIONS]', locationsText)
+      .replaceAll('[DATE RANGE]', dateRangeText);
   };
 
   const generateSimplifiedTemplate = () => {
@@ -213,14 +263,200 @@ Based on recent UW findings, many WA agencies may be unaware of federal access t
   };
 
   const generateComprehensiveTemplate = () => {
-    // Return the full comprehensive template (simplified here for brevity)
+    const feeWaiverText = formData.requestFeeWaiver
+      ? '\n\n**Fee Waiver/Reduction Request:** I request a waiver or reduction of fees pursuant to RCW 42.56.120 as this request is in the public interest and not for commercial purposes. The disclosure of this information will contribute significantly to public understanding of government operations.'
+      : '';
+
+    const auditLogsText = formData.includeAuditLogs
+      ? '\n- **Network audit logs showing all searches conducted by any agency, including search reasons/purposes**'
+      : '';
+
+    const federalAccessText = formData.includeFederalAccess
+      ? `\n- Records of any federal agency access to surveillance data (FBI, ICE, DEA, CBP/Border Patrol, HSI, etc.)
+- Documentation of whether "National Lookup" or similar inter-agency search features were enabled
+- Records showing whether your agency was aware of federal access to your surveillance systems
+- Communications regarding federal agency access requests or data sharing
+- Records of access revocations or security audits following the UW Center for Human Rights report (October 2025)`
+      : '';
+
     return `# PUBLIC RECORDS REQUEST
 ## Law Enforcement Surveillance Camera Systems Request Template
 ### Automated License Plate Readers (ALPR) & Video Surveillance
 ### Washington State Public Records Act (RCW 42.56)
 
-[Similar structure to simplified but with all 8 detailed sections]
-`;
+---
+
+**Date:** [INSERT DATE]
+
+**To:** [POLICE DEPARTMENT NAME]
+**Attention:** Public Records Officer/Public Disclosure Unit
+**Email:** [DEPARTMENT EMAIL]
+
+**From:**
+[YOUR NAME]
+[YOUR EMAIL]
+[YOUR PHONE]
+
+---
+
+## IMPORTANT RECENT LEGAL PRECEDENT
+
+**Skagit County Superior Court Ruling (November 2025):**
+
+Judge Elizabeth Yost Neidzwski of Skagit County Superior Court recently ruled that surveillance camera data, including images captured by Flock cameras, qualifies as public records subject to Washington's Public Records Act (RCW 42.56). This landmark decision came after the cities of Sedro Woolley and Stanwood attempted to block public records requests by arguing that releasing surveillance images would violate privacy.
+
+**Key Findings from the Court:**
+- The judge found that the scope of surveillance was "so broad and indiscriminate" — with most images capturing people not suspected of any crime — that the data must be released under public records law
+- The ruling specifically stated: "The Flock data do qualify as public records subject to the Public Records Act"
+- This decision could affect dozens of Washington police departments using similar surveillance technology
+- Both cities involved in the lawsuit have since turned off their camera systems
+
+**Additional Context - Federal Access Concerns:**
+
+A University of Washington Center for Human Rights report (October 2025) revealed that federal agents, including U.S. Border Patrol and ICE, had accessed Washington's surveillance camera networks, potentially in violation of state law prohibiting use of such systems for immigration enforcement.
+
+---
+
+## REQUEST FOR PUBLIC RECORDS
+
+Dear Public Records Officer,
+
+Pursuant to the Washington State Public Records Act, RCW 42.56, I am requesting access to and copies of public records described below. This request is made for personal use and not for commercial purposes.
+
+### REQUESTED RECORDS
+
+I am requesting all records related to automated surveillance camera systems operated by, accessible to, or used in partnership with [DEPARTMENT NAME], including but not limited to:
+
+**Technology Systems Covered by This Request:**
+- Automatic License Plate Reader (ALPR) systems including but not limited to: Flock Safety, Motorola/Vigilant Solutions, Genetec AutoVu, ELSAG, Neology, and any other fixed or mobile ALPR systems
+- Video surveillance and monitoring systems including but not limited to: Ring Neighbors Public Safety Service/Law Enforcement Portal, Amazon Sidewalk network access, Axon/Evidence.com camera integrations, Real-Time Crime Center camera networks, community camera registry programs
+- Facial recognition or biometric surveillance systems integrated with camera networks
+- Any other mass surveillance camera technology, whether owned, leased, accessed, or operated through third-party agreements
+
+**Specific Camera Location(s) of Interest:**
+[CAMERA LOCATIONS]
+
+For each identified camera/surveillance location and system, I request:
+
+### 1. DEPLOYMENT AND OPERATIONAL RECORDS
+- All contracts, agreements, or memoranda of understanding between [DEPARTMENT NAME] and surveillance technology vendors including but not limited to: Flock Safety, Ring/Amazon, Axon, Motorola, Vigilant Solutions, Genetec, and any other surveillance system providers
+- Purchase orders, invoices, and payment records for all surveillance camera systems and related services
+- Installation dates and locations of all surveillance cameras (include maps, network diagrams, or coverage area maps if available)
+- Complete inventory of all surveillance camera systems by type, manufacturer, and location
+- Current operational status of each camera/system
+- Maintenance and service records
+- Any technical specifications, operational manuals, or user guides for the camera systems
+- Integration records showing how different systems connect or share data
+
+### 2. POLICY AND PROCEDURE RECORDS
+- All policies, procedures, standard operating procedures (SOPs), or guidelines governing the use of surveillance camera systems including ALPR, video surveillance, and facial recognition technologies
+- Data retention policies specific to each type of surveillance data
+- Privacy impact assessments or privacy policies related to surveillance systems
+- Training materials provided to officers or staff regarding surveillance camera system use
+- Audit procedures or oversight mechanisms for surveillance data access and use
+- Policies governing third-party access to surveillance systems
+- Community notification or transparency policies regarding surveillance deployments
+
+### 3. DATA SHARING AND ACCESS RECORDS
+- Lists of all agencies, organizations, or entities with access to surveillance data collected by [DEPARTMENT NAME]
+- Data sharing agreements with other law enforcement agencies (local, state, federal, tribal)
+- Records of participation in any surveillance data sharing networks (Flock network, Ring Neighbors portal, regional crime centers, etc.)
+- Lists of all third-party vendors with access to surveillance data
+- Logs of external agency queries or access to data from the specified locations for the period [DATE RANGE]${auditLogsText}${federalAccessText}
+- Any agreements related to participation in inter-agency data sharing networks
+- Records of civilian requests for footage through community camera programs
+
+### 4. USAGE STATISTICS
+
+For the period [DATE RANGE]:
+
+**ALPR Systems:**
+- Total number of license plate reads captured by each camera
+- Number of "hot list" alerts generated
+- Records indicating how alerts were categorized (stolen vehicle, wanted person, missing person, etc.)
+- Documentation of cases where ALPR alerts led to stops, arrests, or investigations
+- Statistics on accuracy rates, false positive alerts, or system errors
+
+**Video Surveillance Systems:**
+- Total hours of footage captured
+- Number of footage requests processed (by agency personnel, external agencies, or civilians)
+- Number of investigations assisted by surveillance footage
+
+**Facial Recognition Systems (if applicable):**
+- Number of searches conducted
+- Accuracy and false positive rates
+- Legal basis for each search
+
+### 5. DATA RETENTION AND DELETION RECORDS
+- Current data retention periods for each type of surveillance data (ALPR, video footage, facial recognition, etc.)
+- Records of data deletion or purging activities
+- Storage location of surveillance data (local, cloud, third-party servers)
+- Geographic location of data servers (in-state, out-of-state, international)
+- Chain of custody procedures for surveillance evidence
+
+### 6. CORRESPONDENCE AND COMMUNICATIONS
+- Email communications between [DEPARTMENT NAME] staff and surveillance technology vendors including Flock Safety, Ring/Amazon, Axon, Motorola, Vigilant Solutions, Genetec, and any other surveillance system providers
+- Internal communications regarding the deployment, operation, or policy related to surveillance cameras
+- Any correspondence with community members, elected officials, or oversight bodies regarding surveillance cameras
+- Marketing materials, presentations, or proposals received from surveillance technology vendors
+
+### 7. FINANCIAL RECORDS
+- Total costs associated with surveillance camera systems (purchase, installation, subscription, maintenance)
+- Budget documents allocating funds for ALPR systems
+- Any cost-benefit analyses performed prior to or after deployment
+
+### 8. PUBLIC NOTIFICATION AND TRANSPARENCY
+- Records of public notices or community engagement regarding surveillance camera deployment
+- Any reports to city council, county commissioners, or other governing bodies
+- Public presentations or documents related to surveillance camera programs
+
+---
+
+## REQUEST PARAMETERS
+
+**Time Period:** [DATE RANGE]
+
+**Format Preference:** Electronic copies via email (PDF format preferred) or secure file transfer. If electronic provision is not possible, please provide records in the most cost-effective format available.${feeWaiverText}
+
+---
+
+## LEGAL REQUIREMENTS AND TIMELINE
+
+Pursuant to RCW 42.56.520, I understand that you have five (5) business days to respond to this request by either:
+1. Providing the requested records;
+2. Providing a reasonable estimate of the time required to respond and the cost; or
+3. Denying the request with a written statement of the specific exemption authorizing the withholding and an explanation of how the exemption applies.
+
+If any portion of the requested records is exempt from disclosure, I request that you provide all non-exempt portions with redactions clearly marked and explained pursuant to RCW 42.56.210.
+
+---
+
+## CONTACT INFORMATION
+
+Please acknowledge receipt of this request within five (5) business days. I can be reached at:
+
+**Email:** [YOUR EMAIL] (preferred)
+**Phone:** [YOUR PHONE]
+
+I prefer communication via email for efficiency and to maintain a clear record of correspondence.
+
+---
+
+## CLARIFICATION
+
+If any part of this request is unclear or requires clarification, please contact me immediately. I am happy to work with you to narrow or clarify this request to ensure compliance with the Public Records Act while obtaining the information sought.
+
+Thank you for your attention to this matter. I look forward to your prompt response.
+
+Sincerely,
+
+[YOUR NAME]
+[INSERT DATE]
+
+---
+
+**Legal Support:**
+If denied based on privacy concerns, reference the Skagit County Superior Court ruling (*Rodriguez v. City of Sedro Woolley*, Nov. 2025) that confirmed surveillance data is subject to RCW 42.56. The court found that "broad and indiscriminate" surveillance collection does not create a privacy exemption.`;
   };
 
   const markdownToHtml = (md) => {
@@ -387,15 +623,26 @@ ${bodyHtml}
                 </select>
               </div>
 
+              {formData.agencyType === 'Police Department' && (
+                <div className="mb-6 bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <Info className="w-5 h-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-gray-300">
+                      Some smaller municipalities may not have their own police department and are served by the county sheriff's office. If you don't find your city listed or know it doesn't have a PD, switch to "Sheriff's Office" above to find the county contact.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2">
-                  Search for Your City or County
+                  {formData.agencyType === "Sheriff's Office" ? 'Search for Your County' : 'Search for Your City or County'}
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
-                    placeholder="Type to search (e.g., 'Olympia', 'Thurston County')..."
+                    placeholder={formData.agencyType === "Sheriff's Office" ? "Type to search (e.g., 'Thurston', 'King')..." : "Type to search (e.g., 'Olympia', 'Thurston County')..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -415,8 +662,14 @@ ${bodyHtml}
                           ${formData.selectedAgency?.City === agency.City && formData.selectedAgency?.County === agency.County ? 'bg-blue-600' : ''}
                         `}
                       >
-                        <div className="font-semibold">{agency.City}</div>
-                        <div className="text-sm text-gray-400">{agency.County} County • {agency.Notes}</div>
+                        <div className="font-semibold">
+                          {formData.agencyType === "Sheriff's Office" ? `${agency.County} County` : agency.City}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {formData.agencyType === "Sheriff's Office"
+                            ? 'County Public Records Contact'
+                            : `${agency.County} County • ${agency.Notes}`}
+                        </div>
                         <div className="text-xs text-gray-500 mt-1">{agency.Email}</div>
                       </button>
                     ))
@@ -447,6 +700,36 @@ ${bodyHtml}
                         )}
                         <div><strong>Location:</strong> {formData.selectedAgency.City}, {formData.selectedAgency.County} County</div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isSmallTownEntry && countySheriffEntry && (
+                <div className="mt-4 bg-yellow-900 bg-opacity-30 border border-yellow-500 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-yellow-400 mr-2 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-semibold text-yellow-400 mb-1">Small municipality detected</div>
+                      <div className="text-sm text-gray-300 mb-3">
+                        {formData.selectedAgency.City} may not have its own police department. You may also want to send a request to the {formData.selectedAgency.County} County Sheriff's Office.
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFormData({
+                            ...formData,
+                            agencyType: "Sheriff's Office",
+                            selectedAgency: countySheriffEntry,
+                            agencyName: `${countySheriffEntry.County} County Sheriff's Office`,
+                            agencyEmail: countySheriffEntry.Email,
+                            agencyPortal: countySheriffEntry['Portal URL'] || '',
+                          });
+                        }}
+                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-semibold transition"
+                      >
+                        Switch to {formData.selectedAgency.County} County Sheriff's Office
+                      </button>
                     </div>
                   </div>
                 </div>
