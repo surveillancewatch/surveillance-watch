@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cell-Site Simulator Surveillance in Tacoma, WA - WA Surveillance Watch</title>
+  <meta name="description" content="Open-source intelligence report on the Tacoma Police Department's secret cell-site simulator (StingRay) program, funded by DHS grants and hidden under FBI non-disclosure agreements.">
+  <meta name="keywords" content="Tacoma, stingray, cell-site simulator, IMSI catcher, surveillance, Washington State, DHS grant, FBI NDA, Harris Corporation, HB 1440">
+  <meta property="og:title" content="Cell-Site Simulator Surveillance in Tacoma, WA">
+  <meta property="og:description" content="How Tacoma PD secretly operated StingRay surveillance for six years using DHS grants, FBI NDAs, and misleading court orders.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="WA Surveillance Watch">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #1a1a1a;
+      --bg-callout: #1c1917;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #737373;
+      --accent-red: #ef4444;
+      --accent-red-dim: #991b1b;
+      --accent-blue: #60a5fa;
+      --accent-blue-hover: #93bbfd;
+      --accent-amber: #f59e0b;
+      --border: #262626;
+      --border-accent: #991b1b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    a { color: var(--accent-blue); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--accent-blue-hover); text-decoration: underline; }
+
+    /* Navigation */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .nav-brand:hover { color: var(--text-primary); text-decoration: none; }
+    .nav-brand svg { flex-shrink: 0; }
+    .nav-links { display: flex; gap: 1.25rem; font-size: 0.85rem; }
+    .nav-links a { color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--accent-blue); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 4rem 1.5rem 3rem;
+      background: linear-gradient(135deg, rgba(120,119,198,0.12) 0%, transparent 40%),
+                  linear-gradient(225deg, rgba(74,144,226,0.12) 0%, transparent 40%),
+                  var(--bg-primary);
+    }
+    .hero-inner { max-width: 900px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent-red);
+      color: #fff;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .hero-meta span { display: flex; align-items: center; gap: 0.35rem; }
+
+    /* Content */
+    .content-wrap { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+    /* Methodology callout */
+    .methodology-note {
+      background: var(--bg-callout);
+      border-left: 4px solid var(--accent-amber);
+      padding: 1rem 1.25rem;
+      margin-bottom: 2.5rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .methodology-note strong { color: var(--accent-amber); }
+
+    /* Table of contents */
+    .toc {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 3rem;
+    }
+    .toc h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+      padding: 0;
+    }
+    .toc li {
+      counter-increment: toc-counter;
+      margin-bottom: 0.4rem;
+    }
+    .toc li::before {
+      content: counter(toc-counter) ".";
+      color: var(--accent-red);
+      font-weight: 600;
+      margin-right: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .toc a { font-size: 0.95rem; }
+
+    /* Sections */
+    .report-section { margin-bottom: 3rem; scroll-margin-top: 4rem; }
+    .report-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent-red-dim);
+    }
+    .report-section h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 1.5rem 0 0.75rem;
+    }
+    .report-section p { margin-bottom: 1rem; color: var(--text-secondary); }
+    .report-section ul, .report-section ol {
+      margin: 0.5rem 0 1.25rem 1.25rem;
+      color: var(--text-secondary);
+    }
+    .report-section li { margin-bottom: 0.5rem; }
+    .report-section li strong { color: var(--text-primary); }
+    .report-section blockquote {
+      background: var(--bg-card);
+      border-left: 3px solid var(--accent-blue);
+      padding: 0.85rem 1.25rem;
+      margin: 1rem 0 1.25rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    /* Key finding callout */
+    .key-finding {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid var(--accent-red-dim);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+    }
+    .key-finding strong { color: var(--accent-red); }
+    .key-finding p { color: var(--text-secondary); margin-bottom: 0; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: var(--bg-card);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    thead { background: var(--bg-secondary); }
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    tr:last-child td { border-bottom: none; }
+    td strong { color: var(--text-primary); }
+
+    /* Financial totals row */
+    tr.total-row td {
+      font-weight: 700;
+      color: var(--accent-red);
+      border-top: 2px solid var(--accent-red-dim);
+    }
+
+    /* Citation references */
+    .cite {
+      font-size: 0.75rem;
+      vertical-align: super;
+      color: var(--accent-blue);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .cite:hover { text-decoration: underline; }
+
+    /* Anniversary callout */
+    .anniversary-note {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(120, 119, 198, 0.1));
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+    }
+
+    /* Source appendix */
+    .source-category { margin-bottom: 2rem; }
+    .source-category h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-red);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .source-entry {
+      display: grid;
+      grid-template-columns: 2rem 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+      align-items: baseline;
+    }
+    .source-num {
+      color: var(--accent-red);
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .source-text { color: var(--text-secondary); }
+    .source-text a { word-break: break-all; }
+
+    /* Footer */
+    .report-footer {
+      background: #000;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    .report-footer p { margin-bottom: 0.75rem; }
+    .report-footer a { color: var(--accent-blue); }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Status badges */
+    .status-confirmed {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-suspected {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-unknown {
+      display: inline-block;
+      background: rgba(163, 163, 163, 0.15);
+      color: #a3a3a3;
+      border: 1px solid rgba(163, 163, 163, 0.3);
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-denied {
+      display: inline-block;
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(96, 165, 250, 0.3);
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td .status-confirmed, td .status-suspected, td .status-unknown, td .status-denied {
+      margin-top: 0.25rem;
+    }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; color: #111; font-size: 11pt; }
+      .site-nav, .hero-badge { display: none; }
+      .hero { background: none; padding: 1rem 0; }
+      .hero h1 { color: #111; }
+      .content-wrap { padding: 0; }
+      a { color: #111; }
+      .report-section h2 { border-bottom-color: #333; }
+      table, th, td { border: 1px solid #ccc; }
+      thead { background: #f5f5f5; }
+      .toc, .methodology-note, .key-finding, .anniversary-note, blockquote {
+        border-color: #999;
+        background: #f9f9f9;
+      }
+      .report-footer { display: none; }
+      .source-text a::after { content: " (" attr(href) ")"; font-size: 8pt; color: #666; }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 2.5rem 1rem 2rem; }
+      .content-wrap { padding: 1.5rem 1rem 3rem; }
+      .hero-meta { gap: 0.75rem; flex-direction: column; }
+      th, td { padding: 0.5rem 0.65rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="https://wasurveillancewatch.org" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      WA Surveillance Watch
+    </a>
+    <div class="nav-links">
+      <a href="#toc">Contents</a>
+      <a href="#acquisition">Timeline</a>
+      <a href="#nda">FBI NDA</a>
+      <a href="#litigation">Litigation</a>
+      <a href="#legislation">HB 1440</a>
+      <a href="#wa-map">WA Map</a>
+      <a href="#sources">Sources</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge">OSINT Research Report</span>
+    <h1>Cell-Site Simulator Surveillance in Tacoma, Washington</h1>
+    <p class="hero-subtitle">How a DHS-funded StingRay program operated in secret for six years, shielded by FBI non-disclosure agreements and misleading court orders.</p>
+    <div class="hero-meta">
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Published May 11, 2026
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        WA Surveillance Watch Research Team
+      </span>
+      <span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Open Source / Public Domain
+      </span>
+    </div>
+  </div>
+</header>
+
+<!-- Content -->
+<main class="content-wrap">
+
+  <!-- Methodology note -->
+  <div class="methodology-note">
+    <strong>Source Methodology:</strong> Every claim in this report is derived from publicly available sources including court filings, government records, FOIA/PRA responses, vetted journalism, and civil liberties organization publications. No non-public or privileged information was used. All sources are cited inline and compiled in <a href="#sources">Appendix A</a>.
+  </div>
+
+  <!-- Executive Summary -->
+  <section class="report-section">
+    <h2>Executive Summary</h2>
+    <p>Between 2008 and 2014, the Tacoma Police Department secretly operated cell-site simulator surveillance technology&mdash;commonly known as a &ldquo;StingRay&rdquo;&mdash;funded by federal homeland security grants and shielded from public disclosure by a non-disclosure agreement with the FBI. The program was justified to city officials as counter-terrorism equipment but was used almost exclusively for drug investigations. When the program became public in August 2014, it triggered public records lawsuits, over $361,000 in court-ordered penalties against the City of Tacoma, and directly prompted Washington State to pass one of the nation&rsquo;s strongest cell-site simulator warrant laws.</p>
+    <p>This report compiles the complete public record of Tacoma&rsquo;s cell-site simulator program from primary sources.</p>
+  </section>
+
+  <!-- Table of Contents -->
+  <div class="toc" id="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#css-background">What is a Cell-Site Simulator?</a></li>
+      <li><a href="#acquisition">Acquisition Timeline</a></li>
+      <li><a href="#funding">Federal Funding and Grant Programs</a></li>
+      <li><a href="#nda">The FBI Non-Disclosure Agreement</a></li>
+      <li><a href="#operations">Operational Use: 2009&ndash;2014</a></li>
+      <li><a href="#disclosure">Public Disclosure: August 2014</a></li>
+      <li><a href="#litigation">Public Records Litigation</a></li>
+      <li><a href="#legislation">Legislative Response: HB 1440</a></li>
+      <li><a href="#seaglass">Related: SeaGlass IMSI-Catcher Detection</a></li>
+      <li><a href="#wa-map">Where in Washington is This Technology?</a></li>
+      <li><a href="#financials">Financial Summary</a></li>
+      <li><a href="#status">Current Status and Open Questions</a></li>
+      <li><a href="#sources">Appendix A: Source Index</a></li>
+    </ol>
+  </div>
+
+  <!-- Section 1 -->
+  <section class="report-section" id="css-background">
+    <h2>1. What is a Cell-Site Simulator?</h2>
+    <p>A cell-site simulator (CSS), also marketed under the brand names StingRay, KingFish, and Hailstorm, is a device manufactured by Harris Corporation (now L3Harris Technologies) that mimics a legitimate cell tower. When activated, all cell phones in the vicinity connect to the simulator instead of a real tower, allowing the operator to:</p>
+    <ul>
+      <li>Identify the location of a target phone</li>
+      <li>Collect identifying information (IMSI/IMEI numbers) from <strong>every phone in range</strong></li>
+      <li>In some configurations, intercept call and text metadata</li>
+    </ul>
+    <p>The technology was originally developed for military and intelligence use. Beginning in the mid-2000s, Harris Corporation began selling versions to state and local law enforcement, with FBI approval required for each sale.<a href="#src-1" class="cite">[1]</a></p>
+  </section>
+
+  <!-- Section 2 -->
+  <section class="report-section" id="acquisition">
+    <h2>2. Acquisition Timeline</h2>
+
+    <h3>2007&ndash;2008: Initial Purchase</h3>
+    <p>The Tacoma Police Department first acquired cell-site simulator technology in 2007&ndash;2008. According to records obtained through public records requests:</p>
+    <ul>
+      <li>TPD Detective <strong>Jeffrey Shipp</strong> procured a <strong>$450,000 training and equipment grant</strong> for a &ldquo;cellular phone tracking system&rdquo;&mdash;one of only five such grants awarded nationally. Shipp was named TPD Employee of the Month for securing the grant.<a href="#src-2" class="cite">[2]</a><a href="#src-3" class="cite">[3]</a></li>
+      <li>In 2008, the federal government shipped a <strong>StingRay</strong> and a <strong>KingFish</strong> device to Detective Shipp via FedEx overnight.<a href="#src-3" class="cite">[3]</a></li>
+      <li>The grant originated from the <strong>Department of Justice</strong> through the <strong>Counterdrug Technology Assessment Center, Technology Transfer Program</strong>&mdash;a federal program providing equipment to local law enforcement for drug enforcement.<a href="#src-3" class="cite">[3]</a></li>
+      <li>A 2007 internal memo sought to <strong>bypass competitive bidding</strong> procedures, citing Harris Corporation as the sole manufacturer.<a href="#src-2" class="cite">[2]</a></li>
+    </ul>
+
+    <h3>March 2013: Major Upgrade</h3>
+    <p>On March 19, 2013, the Tacoma City Council <strong>unanimously approved</strong> a $251,752.41 equipment upgrade:</p>
+    <ul>
+      <li><strong>$188,814</strong> (75%) came from a <strong>DHS Port Security Grant</strong></li>
+      <li><strong>$62,938</strong> (25%) came from the <strong>Tacoma Police Federal Asset Seizure Fund</strong> (local match)</li>
+      <li>The upgrade included a <strong>StingRay II Enhancement</strong> and a <strong>Hailstorm</strong> device (4G LTE-capable) at <strong>$109,421</strong> (GSA contract pricing)</li>
+      <li>A <strong>$3,500 laptop</strong> was bundled into the purchase price<a href="#src-4" class="cite">[4]</a><a href="#src-5" class="cite">[5]</a><a href="#src-10" class="cite">[10]</a></li>
+    </ul>
+    <p>Police Chief <strong>Donald Ramsdell</strong> and Detective Shipp presented the upgrade to the City Council&rsquo;s Board of Contracts and Awards as supporting the <strong>Explosives Ordinance Detail (EOD)</strong> with &ldquo;IED prevention, protection, response and recovery measures.&rdquo;<a href="#src-5" class="cite">[5]</a><a href="#src-10" class="cite">[10]</a></p>
+    <p>City Council members later stated they <strong>did not understand the full capabilities</strong> of the technology when they approved the purchase.<a href="#src-5" class="cite">[5]</a></p>
+
+    <h3>February 2014: Additional Software</h3>
+    <p>TPD purchased <strong>$51,727</strong> in software from <strong>Verint Systems</strong> (Melville, NY), a company founded by former Israeli intelligence operatives. The purchase is believed to be the <strong>SkyLock</strong> cell-phone location-tracking system.<a href="#src-6" class="cite">[6]</a></p>
+  </section>
+
+  <!-- Section 3 -->
+  <section class="report-section" id="funding">
+    <h2>3. Federal Funding and Grant Programs</h2>
+    <p>The acquisition of Tacoma&rsquo;s cell-site simulator technology was funded through multiple federal grant programs, bypassing normal local appropriations and oversight:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Year</th><th>Grant Program</th><th>Amount</th><th>Federal Agency</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2007&ndash;2008</td><td>DOJ Law Enforcement Grant / Counterdrug Technology Assessment Center</td><td>~$450,000</td><td>Dept. of Justice / ONDCP</td></tr>
+          <tr><td>2013</td><td>DHS Port Security Grant Program (PSGP)</td><td>$188,814</td><td>DHS / FEMA</td></tr>
+          <tr><td>2013</td><td>Local match from Federal Asset Seizure Fund</td><td>$62,938</td><td>City of Tacoma</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Tacoma sits within the <strong>Seattle Urban Area Security Initiative (UASI) region</strong>, which encompasses King, Pierce, and Snohomish Counties. UASI grants have been used throughout the Puget Sound region to fund law enforcement technology with minimal local legislative scrutiny, since the grants do not require cities to appropriate their own funds.<a href="#src-5" class="cite">[5]</a><a href="#src-10" class="cite">[10]</a></p>
+
+    <div class="key-finding">
+      <p><strong>Key finding:</strong> The terrorism and IED justification used to secure both the original grant and the 2013 upgrade was acknowledged as pretextual. TPD later admitted the cell-site simulator was <strong>never used for IED-related purposes</strong>.<a href="#src-7" class="cite">[7]</a><a href="#src-10" class="cite">[10]</a></p>
+    </div>
+  </section>
+
+  <!-- Section 4 -->
+  <section class="report-section" id="nda">
+    <h2>4. The FBI Non-Disclosure Agreement</h2>
+    <p>As a condition of purchasing Harris Corporation equipment, the Tacoma Police Department was required to sign a non-disclosure agreement with the FBI.</p>
+
+    <h3>Authorization Chain</h3>
+    <p>On <strong>February 13, 2013</strong>, FBI Technical Surveillance Section Chief <strong>W. L. Scott Bean III</strong> sent a letter to Harris Corporation (addressed to Patricia Sciandra) authorizing the sale of &ldquo;the state-and-local version of the Stingray product with the restricted <strong>Landshark</strong> software&rdquo; to TPD. This authorization referenced:</p>
+    <ul>
+      <li><strong>Contract J-FBI-09-211</strong> (the master FBI&ndash;Harris Corporation agreement)</li>
+      <li>A separate <strong>April 6, 2010 agreement</strong> between FBI and Harris Corporation</li>
+      <li>An existing NDA between the FBI and TPD</li>
+    </ul>
+    <p>A PDF of this letter was released by the Center for Effective Humane Rights Protection (CEHRP) on May 19, 2015.<a href="#src-8" class="cite">[8]</a></p>
+
+    <h3>NDA Terms</h3>
+    <p>The NDA, signed on <strong>January 3, 2013</strong> by Police Chief Ramsdell, FBI Special Agent <strong>Laura Laughlin</strong> (Seattle Field Office), and four TPD officers, contained provisions that:</p>
+    <ul>
+      <li>Required TPD to <strong>notify the FBI</strong> before responding to any public records request about the device</li>
+      <li>Required TPD to allow the FBI &ldquo;sufficient time to seek to prevent disclosure&rdquo;</li>
+      <li>Prohibited use of information about the device in <strong>any civil or criminal proceeding</strong> without prior written FBI approval</li>
+      <li>Included a <strong>&ldquo;drop prosecution&rdquo; clause</strong>: the FBI could compel TPD to <strong>dismiss criminal cases rather than reveal stingray use</strong> in court<a href="#src-8" class="cite">[8]</a><a href="#src-9" class="cite">[9]</a><a href="#src-10" class="cite">[10]</a></li>
+    </ul>
+
+    <h3>Nationwide Pattern</h3>
+    <p>The Tacoma NDA followed a template used by at least 23 agencies across the country, including departments in San Diego, Chicago, Miami, Baltimore, and Tucson. Harris Corporation was required to notify the FBI whenever any local department sought to purchase a StingRay, and the FBI imposed the NDA as a precondition.<a href="#src-9" class="cite">[9]</a><a href="#src-17" class="cite">[17]</a></p>
+  </section>
+
+  <!-- Section 5 -->
+  <section class="report-section" id="operations">
+    <h2>5. Operational Use: 2009&ndash;2014</h2>
+
+    <h3>Deployment Statistics</h3>
+    <p>Public records obtained by journalists and through litigation revealed:</p>
+    <ul>
+      <li>Between <strong>April 2009 and June 2014</strong>, TPD deployed the cell-site simulator at least <strong>179 times</strong>, each with a court order<a href="#src-7" class="cite">[7]</a><a href="#src-10" class="cite">[10]</a></li>
+      <li>An additional <strong>10 emergency deployments</strong> occurred without prior judicial approval<a href="#src-3" class="cite">[3]</a></li>
+      <li>In the <strong>first half of 2014 alone</strong>, drug-case deployments exceeded the total number of all deployments across the previous five years combined<a href="#src-7" class="cite">[7]</a></li>
+    </ul>
+
+    <h3>Misrepresentation to Courts</h3>
+    <p>TPD obtained <strong>pen register / trap and trace (PR/TT) court orders</strong> from Pierce County Superior Court rather than full search warrants. This is significant because:</p>
+    <ul>
+      <li>PR/TT orders require only a showing that information is &ldquo;relevant and material&rdquo; to an investigation&mdash;a <strong>lower standard than probable cause</strong><a href="#src-7" class="cite">[7]</a></li>
+      <li>The applications described the technology as a &ldquo;cellular tracking device&rdquo; without explaining it was a cell-site simulator or describing its capabilities<a href="#src-3" class="cite">[3]</a><a href="#src-13" class="cite">[13]</a></li>
+      <li><strong>Pierce County Superior Court judges did not know</strong> they were authorizing stingray surveillance<a href="#src-13" class="cite">[13]</a></li>
+      <li>A TPD detective stated <strong>under oath</strong> that officers intentionally omitted any mention of cell-site simulators from case reports<a href="#src-3" class="cite">[3]</a></li>
+      <li>Neither prosecutors nor defense attorneys were informed of stingray use<a href="#src-13" class="cite">[13]</a></li>
+    </ul>
+
+    <h3>Shared Use With Other Agencies</h3>
+    <p>TPD also deployed its cell-site simulator <strong>on behalf of other agencies</strong>, including:</p>
+    <ul>
+      <li>Pierce County Sheriff&rsquo;s Department</li>
+      <li>DEA Seattle Field Division</li>
+      <li>U.S. Immigration and Customs Enforcement (ICE)<a href="#src-3" class="cite">[3]</a><a href="#src-13" class="cite">[13]</a></li>
+    </ul>
+  </section>
+
+  <!-- Section 6 -->
+  <section class="report-section" id="disclosure">
+    <h2>6. Public Disclosure: August 2014</h2>
+    <p>The Tacoma News Tribune broke the story in <strong>August 2014</strong> after reporter <strong>Adam Lynn</strong> obtained operational deployment data through public records requests.<a href="#src-13" class="cite">[13]</a><a href="#src-14" class="cite">[14]</a></p>
+    <p>Key revelations that followed:</p>
+    <ul>
+      <li>Pierce County Superior Court judges expressed surprise at the scope of surveillance they had unknowingly authorized</li>
+      <li>City Council members said they were not told the device&rsquo;s full capabilities</li>
+      <li>TPD acknowledged the device had <strong>never been used for its stated IED/counter-terrorism purpose</strong><a href="#src-7" class="cite">[7]</a></li>
+      <li>Privacy activist <strong>Phil Mocek</strong> filed a public records request for the FBI NDA in mid-2014, which TPD heavily redacted despite identical NDAs from other agencies already being publicly available<a href="#src-9" class="cite">[9]</a><a href="#src-15" class="cite">[15]</a></li>
+    </ul>
+    <p>After the media exposure, Pierce County Superior Court judges in <strong>November 2014</strong> ordered TPD to:</p>
+    <ul>
+      <li>Specify device usage in all future court order applications</li>
+      <li>Refrain from retaining data collected on non-suspects<a href="#src-13" class="cite">[13]</a></li>
+    </ul>
+  </section>
+
+  <!-- Section 7 -->
+  <section class="report-section" id="litigation">
+    <h2>7. Public Records Litigation</h2>
+
+    <h3>Mocek v. City of Tacoma (2015&ndash;2017)</h3>
+    <p><strong>Filed:</strong> Fall 2015, Pierce County Superior Court</p>
+    <p>Privacy activist Phil Mocek and the <strong>Center for Open Policing</strong> sued over TPD&rsquo;s redaction of the FBI NDA. When released, the document had been redacted to show only the title page, introductory paragraph, and signatures&mdash;&ldquo;the middle was a solid wall of black ink&rdquo;&mdash;despite unredacted copies of identical NDAs from other agencies already being in public circulation.<a href="#src-9" class="cite">[9]</a><a href="#src-15" class="cite">[15]</a></p>
+    <p><strong>Ruling:</strong> Judge <strong>Frank Cuthbertson</strong> found the redactions were not &ldquo;essential to effective law enforcement.&rdquo; The court imposed a <strong>$100/day penalty for 500 days</strong> of wrongful withholding (June 21, 2014 through November 3, 2015).</p>
+    <p><strong>Cost to City of Tacoma: $50,000</strong> plus legal fees.<a href="#src-12" class="cite">[12]</a><a href="#src-15" class="cite">[15]</a></p>
+
+    <h3>Banks/Christopher v. City of Tacoma (2016&ndash;2021)</h3>
+    <p><strong>Filed:</strong> February 11, 2016, Pierce County Superior Court</p>
+    <p>The <strong>ACLU of Washington</strong> filed suit on behalf of four Tacoma residents:</p>
+    <ul>
+      <li><strong>Rev. Gregory Christopher</strong>&mdash;President, Tacoma NAACP chapter</li>
+      <li><strong>Rev. Arthur Banks</strong>&mdash;Black church leader</li>
+      <li><strong>Rev. Toney Montgomery</strong>&mdash;President, Tacoma Ministerial Alliance</li>
+      <li><strong>Whitney Brady</strong>&mdash;2015 City Council candidate</li>
+    </ul>
+    <p>Represented by ACLU-WA staff attorneys <strong>La Rond Baker</strong> and <strong>Jared Friend</strong>, and cooperating attorneys from Schwabe Williamson &amp; Wyatt.<a href="#src-4" class="cite">[4]</a><a href="#src-11" class="cite">[11]</a></p>
+    <p><strong>Trial ruling (2018):</strong> Judge <strong>Helen G. Whitener</strong> (later elevated to the Washington State Supreme Court) found the City of Tacoma had violated the Public Records Act and <strong>failed to produce 11 documents</strong> that should have been disclosed.<a href="#src-11" class="cite">[11]</a></p>
+    <p><strong>Appeal (June 2, 2021):</strong> Division II of the WA Court of Appeals (Judges Glasgow, Maxa, Sutton) upheld penalties of <strong>$182,340</strong>. Three issues were remanded for further proceedings.<a href="#src-11" class="cite">[11]</a></p>
+    <p><strong>Final resolution:</strong> City and plaintiffs settled remaining issues for an additional <strong>$75,000</strong>, plus <strong>$115,530</strong> in attorney fees.</p>
+    <p><strong>Total cost to City of Tacoma: $311,607</strong><a href="#src-4" class="cite">[4]</a><a href="#src-11" class="cite">[11]</a></p>
+
+    <h3>Broader Pattern</h3>
+    <p>The City of Tacoma accumulated approximately <strong>$3 million in Public Records Act penalties</strong> across all cases over a five-year period (2014&ndash;2019).<a href="#src-11" class="cite">[11]</a></p>
+  </section>
+
+  <!-- Section 8 -->
+  <section class="report-section" id="legislation">
+    <h2>8. Legislative Response: HB 1440</h2>
+    <p>The Tacoma stingray revelations directly inspired the Washington State Legislature to act.</p>
+
+    <h3>ESHB 1440 &mdash; Cell-Site Simulator Warrant Requirements</h3>
+    <ul>
+      <li><strong>Introduced:</strong> January 21, 2015, by Rep. <strong>David Taylor</strong> (R-Moxee)</li>
+      <li><strong>Co-sponsors:</strong> Representatives Goodman, Pollet, Scott, Condotta, Shea, G. Hunt, Young, Moscoso, Smith, Ryu, Jinkins, Magendanz, Farrell, McCaslin</li>
+      <li><strong>House vote:</strong> March 4, 2015&mdash;<strong>97&ndash;0</strong> (unanimous)</li>
+      <li><strong>Senate vote:</strong> April 14, 2015&mdash;<strong>47&ndash;0</strong> (unanimous)</li>
+      <li><strong>Signed by Governor Jay Inslee:</strong> May 11, 2015<a href="#src-3" class="cite">[3]</a><a href="#src-16" class="cite">[16]</a></li>
+    </ul>
+
+    <h3>Key Provisions (codified at RCW 9.73)</h3>
+    <ol>
+      <li>Law enforcement must demonstrate <strong>probable cause</strong> before deploying a cell-site simulator</li>
+      <li>Court orders valid for a maximum of <strong>60 days</strong>, with extensions requiring new applications</li>
+      <li><strong>Data deletion mandate:</strong> Information collected on non-target individuals must not be used and must be deleted promptly</li>
+      <li><strong>Judicial education requirements</strong> ensuring judges understand the technology (first of their kind nationally)</li>
+      <li>Emergency exceptions for exigent circumstances<a href="#src-3" class="cite">[3]</a><a href="#src-16" class="cite">[16]</a></li>
+    </ol>
+    <p>The ACLU called this law one that made Washington &ldquo;a leader in restricting use of invasive Stingrays.&rdquo; Washington&rsquo;s data-deletion provisions were the <strong>first of their kind nationally</strong> and influenced subsequent Department of Justice policy.<a href="#src-3" class="cite">[3]</a><a href="#src-16" class="cite">[16]</a></p>
+
+    <div class="anniversary-note">
+      <strong>Note:</strong> May 11, 2026, marks the 11th anniversary of Governor Inslee signing HB 1440 into law.
+    </div>
+  </section>
+
+  <!-- Section 9 -->
+  <section class="report-section" id="seaglass">
+    <h2>9. Related: SeaGlass IMSI-Catcher Detection</h2>
+    <p>In 2017, University of Washington researchers led by Professor <strong>Tadayoshi Kohno</strong> deployed the <strong>SeaGlass</strong> system&mdash;sensors installed in 15 ridesharing vehicles that scanned the cellular spectrum across Seattle and Tacoma over two months.<a href="#src-18" class="cite">[18]</a></p>
+    <p>Key findings:</p>
+    <ul>
+      <li>Measured <strong>1,400+ distinct cell towers</strong> in the Seattle&ndash;Tacoma area</li>
+      <li>Detected <strong>dozens of anomalies</strong> consistent with IMSI-catcher activity</li>
+      <li>An anomalous tower near a <strong>USCIS (immigration services) building south of Seattle</strong> was broadcasting on <strong>six different frequencies</strong>&mdash;96% of all legitimate towers use only one to three</li>
+      <li>A suspicious signal near <strong>Seattle-Tacoma International Airport</strong> exhibited broadcast properties &ldquo;well outside the range expected for any tower in the city&rdquo;</li>
+    </ul>
+    <p>Researchers cautioned that definitive confirmation of IMSI-catcher activity would require corroborating evidence.<a href="#src-18" class="cite">[18]</a></p>
+  </section>
+
+  <!-- Section 10: Where in WA -->
+  <section class="report-section" id="wa-map">
+    <h2>10. Where in Washington is This Technology?</h2>
+    <p>Cell-site simulator use in Washington State extends well beyond Tacoma. Based on public records, court filings, academic research, and the EFF Atlas of Surveillance, here is what is known about CSS presence across the state.</p>
+
+    <h3>State and Local Agencies</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Agency</th><th>Status</th><th>Evidence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tacoma Police Dept.</strong></td>
+            <td><span class="status-confirmed">Confirmed</span></td>
+            <td>StingRay, KingFish (2008), Hailstorm (2013), Verint SkyLock (2014). 179+ documented deployments. EFF Atlas of Surveillance entry.<a href="#src-19" class="cite">[19]</a></td>
+          </tr>
+          <tr>
+            <td><strong>Pierce County Sheriff</strong></td>
+            <td><span class="status-suspected">Suspected</span></td>
+            <td>No independent possession confirmed, but TPD deployed its StingRay on behalf of Pierce County Sheriff on multiple occasions.<a href="#src-3" class="cite">[3]</a><a href="#src-13" class="cite">[13]</a></td>
+          </tr>
+          <tr>
+            <td><strong>Seattle Police Dept.</strong></td>
+            <td><span class="status-unknown">Unacknowledged</span></td>
+            <td>SPD returned no responsive records to MuckRock FOIA requests for CSS information. However, UW SeaGlass detected anomalies consistent with IMSI-catcher activity near USCIS and Sea-Tac Airport within Seattle&rsquo;s jurisdiction.<a href="#src-18" class="cite">[18]</a></td>
+          </tr>
+          <tr>
+            <td><strong>Washington State Patrol</strong></td>
+            <td><span class="status-unknown">Unknown</span></td>
+            <td>No public records, disclosures, or EFF Atlas entries confirm or deny CSS possession.</td>
+          </tr>
+          <tr>
+            <td><strong>King County Sheriff</strong></td>
+            <td><span class="status-unknown">Unknown</span></td>
+            <td>No public disclosure. King County falls within the Seattle UASI region, which has received DHS grant funding used for surveillance equipment elsewhere.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Federal Agencies Operating in Washington</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Agency</th><th>Status</th><th>Evidence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>FBI Seattle Field Office</strong></td>
+            <td><span class="status-confirmed">Confirmed</span></td>
+            <td>FBI administered the NDA program for all Harris Corporation sales. FBI Seattle (SA Laura Laughlin) directly supervised the Tacoma PD NDA. FBI is the largest known domestic CSS operator nationally.<a href="#src-8" class="cite">[8]</a><a href="#src-17" class="cite">[17]</a></td>
+          </tr>
+          <tr>
+            <td><strong>DEA Seattle Field Division</strong></td>
+            <td><span class="status-confirmed">Confirmed</span></td>
+            <td>TPD deployed its StingRay on behalf of DEA Seattle. DEA is confirmed nationally as one of the heaviest CSS users, spending over $71M on the technology (DOJ-wide) from 2010&ndash;2014.<a href="#src-3" class="cite">[3]</a><a href="#src-13" class="cite">[13]</a></td>
+          </tr>
+          <tr>
+            <td><strong>ICE / HSI</strong></td>
+            <td><span class="status-confirmed">Confirmed</span></td>
+            <td>TPD deployed its StingRay on behalf of ICE. DHS (ICE&rsquo;s parent agency) spent over $24M on CSS technology nationally (2010&ndash;2014). SeaGlass detected anomalies near a USCIS building south of Seattle.<a href="#src-3" class="cite">[3]</a><a href="#src-18" class="cite">[18]</a></td>
+          </tr>
+          <tr>
+            <td><strong>U.S. Marshals Service</strong></td>
+            <td><span class="status-suspected">Suspected</span></td>
+            <td>USMS operates its own CSS fleet nationally and is known to lend devices to local agencies. No WA-specific public records, but USMS maintains a fugitive task force in Seattle.</td>
+          </tr>
+          <tr>
+            <td><strong>CBP / Border Patrol</strong></td>
+            <td><span class="status-unknown">Unknown</span></td>
+            <td>CBP has acknowledged CSS use at the national level. CBP operates at the WA&ndash;Canada border and at Sea-Tac Airport. No WA-specific disclosures.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Anomalous Signal Detections (SeaGlass 2017)</h3>
+    <p>The University of Washington&rsquo;s SeaGlass project detected the following anomalies consistent with IMSI-catcher activity in the Seattle&ndash;Tacoma corridor:<a href="#src-18" class="cite">[18]</a></p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Location</th><th>Anomaly</th><th>Possible Operator</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Near USCIS building, south of Seattle</strong></td>
+            <td>Tower broadcasting on 6 frequencies (96% of towers use 1&ndash;3)</td>
+            <td>DHS / ICE immigration enforcement</td>
+          </tr>
+          <tr>
+            <td><strong>Near Seattle-Tacoma International Airport</strong></td>
+            <td>Broadcast properties &ldquo;well outside the range expected for any tower in the city&rdquo;</td>
+            <td>CBP, TSA, or airport security operations</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="key-finding">
+      <p><strong>Transparency gap:</strong> Tacoma remains the only Washington agency with extensively documented CSS possession and use&mdash;not because it is the only user, but because it is the only agency whose program was exposed through investigative journalism and public records litigation. The FBI NDA framework actively suppresses disclosure by all participating agencies.<a href="#src-9" class="cite">[9]</a><a href="#src-17" class="cite">[17]</a></p>
+    </div>
+
+    <h3>What You Can Do</h3>
+    <p>Washington&rsquo;s Public Records Act (RCW 42.56) gives every resident the right to request records about surveillance technology from any state or local agency. WA Surveillance Watch provides <a href="https://wasurveillancewatch.org">free templates</a> for filing cell-site simulator records requests, including templates specific to CSS acquisition documents, usage logs, and FBI NDA agreements.</p>
+  </section>
+
+  <!-- Section 11 -->
+  <section class="report-section" id="financials">
+    <h2>11. Financial Summary</h2>
+
+    <h3>Acquisition and Equipment Costs</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Amount</th><th>Year</th><th>Funding Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Initial StingRay + KingFish</td><td><strong>~$450,000</strong> (grant total)</td><td>2007&ndash;2008</td><td>DOJ / Counterdrug Technology Assessment Center</td></tr>
+          <tr><td>StingRay II Enhancement + Hailstorm upgrade</td><td><strong>$251,752</strong></td><td>March 2013</td><td>75% DHS Port Security Grant / 25% Federal Asset Seizure Fund</td></tr>
+          <tr><td>Hailstorm device (within above total)</td><td>$109,421</td><td>2013</td><td>GSA contract pricing</td></tr>
+          <tr><td>Verint/SkyLock software</td><td><strong>$51,727</strong></td><td>Feb 2014</td><td>Unknown</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Litigation Costs to Taxpayers</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Case</th><th>Amount</th><th>Year</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mocek v. City of Tacoma (NDA redaction)</td><td><strong>$50,000+</strong></td><td>2017</td></tr>
+          <tr><td>Banks/Christopher v. City of Tacoma (ACLU-WA)</td><td><strong>$311,607</strong></td><td>2018&ndash;2022</td></tr>
+          <tr class="total-row"><td>Total litigation costs</td><td>$361,607+</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 12 -->
+  <section class="report-section" id="status">
+    <h2>12. Current Status and Open Questions</h2>
+    <ol>
+      <li><strong>Does TPD still operate cell-site simulators?</strong> A 2022 MuckRock public records request sought updated information about TPD&rsquo;s current CSS inventory, including newer technologies from Octasic/Nyxcell and DRT. The response status is unknown.<a href="#src-9" class="cite">[9]</a></li>
+      <li><strong>What other Washington agencies possess cell-site simulators?</strong> The EFF Atlas of Surveillance confirms Tacoma PD&rsquo;s StingRay acquisition. Seattle PD has not acknowledged possession, but SeaGlass detected anomalies consistent with IMSI-catcher activity in the Seattle area. Washington State Patrol&rsquo;s status is unknown.<a href="#src-18" class="cite">[18]</a><a href="#src-19" class="cite">[19]</a></li>
+      <li><strong>Are HB 1440&rsquo;s warrant requirements being followed?</strong> No public audit of compliance has been conducted since the law took effect.</li>
+      <li><strong>What data was collected on bystanders?</strong> During six years of warrantless operation (2008&ndash;2014), every deployment collected identifying information from all phones in the device&rsquo;s range. The scope of incidental collection and whether that data was retained or destroyed is unknown.</li>
+    </ol>
+  </section>
+
+  <!-- Appendix A -->
+  <section class="report-section" id="sources">
+    <h2>Appendix A: Source Index</h2>
+    <p>All sources are publicly available. URLs verified as of May 11, 2026.</p>
+
+    <div class="source-category">
+      <h3>Court Filings and Legal Records</h3>
+      <div class="source-entry" id="src-1">
+        <span class="source-num">[1]</span>
+        <span class="source-text">ACLU, &ldquo;Stingray Tracking Devices: Who&rsquo;s Got Them?&rdquo;<br><a href="https://www.aclu.org/issues/privacy-technology/surveillance-technologies/stingray-tracking-devices" target="_blank" rel="noopener">aclu.org/issues/privacy-technology/surveillance-technologies/stingray-tracking-devices</a></span>
+      </div>
+      <div class="source-entry" id="src-4">
+        <span class="source-num">[4]</span>
+        <span class="source-text">ACLU-WA, &ldquo;Lawsuit Says Tacoma Police Withheld Documents About Use of Stingray Surveillance Device&rdquo; (Feb 2016)<br><a href="https://www.aclu-wa.org/blog/lawsuit-says-tacoma-police-withheld-documents-about-use-stingray-surveillance-device" target="_blank" rel="noopener">aclu-wa.org/blog/lawsuit-says-tacoma-police-withheld-documents...</a></span>
+      </div>
+      <div class="source-entry" id="src-11">
+        <span class="source-num">[11]</span>
+        <span class="source-text">KIRO 7, &ldquo;Records about phone-surveillance device used by Tacoma police get further scrutiny&rdquo; (Jun 2021, appellate ruling)<br><a href="https://www.kiro7.com/news/local/records-about-phone-surveillance-device-used-by-tacoma-police-get-further-scrutiny/Y263JI2FXRHGJBJGAKVAI4OXUY/" target="_blank" rel="noopener">kiro7.com/news/local/records-about-phone-surveillance-device...</a></span>
+      </div>
+    </div>
+
+    <div class="source-category">
+      <h3>Government Records and FOIA/PRA Responses</h3>
+      <div class="source-entry" id="src-8">
+        <span class="source-num">[8]</span>
+        <span class="source-text">CEHRP, &ldquo;Tacoma Police Department Releases NDA Approval Letter from FBI&rdquo; (May 2015; includes FBI letter PDF)<br><a href="https://www.cehrp.org/tacoma-police-department-releases-nda-approval-letter-from-fbi/" target="_blank" rel="noopener">cehrp.org/tacoma-police-department-releases-nda-approval-letter-from-fbi/</a></span>
+      </div>
+      <div class="source-entry" id="src-9">
+        <span class="source-num">[9]</span>
+        <span class="source-text">MuckRock, &ldquo;Cell site simulator acquisition and use&mdash;Tacoma Police Department&rdquo; (FOIA request and responses)<br><a href="https://www.muckrock.com/foi/tacoma-72/cell-site-simulator-acquisition-and-use-tacoma-police-department-12243/" target="_blank" rel="noopener">muckrock.com/foi/tacoma-72/cell-site-simulator-acquisition-and-use...</a></span>
+      </div>
+      <div class="source-entry" id="src-16">
+        <span class="source-num">[16]</span>
+        <span class="source-text">WA Legislature, ESHB 1440 Bill Summary (2015 session)<br><a href="https://app.leg.wa.gov/billsummary?BillNumber=1440&Year=2015" target="_blank" rel="noopener">app.leg.wa.gov/billsummary?BillNumber=1440&amp;Year=2015</a></span>
+      </div>
+      <div class="source-entry" id="src-19">
+        <span class="source-num">[19]</span>
+        <span class="source-text">EFF Atlas of Surveillance, Tacoma Police Department entry<br><a href="https://atlasofsurveillance.org/search?agency=Tacoma+Police+Department" target="_blank" rel="noopener">atlasofsurveillance.org/search?agency=Tacoma+Police+Department</a></span>
+      </div>
+    </div>
+
+    <div class="source-category">
+      <h3>Vetted Journalism</h3>
+      <div class="source-entry" id="src-2">
+        <span class="source-num">[2]</span>
+        <span class="source-text">Techdirt, &ldquo;Washington Law Enforcement Hides Stingray Purchase And Use From Everyone&rdquo; (Aug 2014)<br><a href="https://www.techdirt.com/2014/08/28/washington-law-enforcement-hides-stingray-purchase-use-everyone-its-ok-because-theyre-fighting-crime/" target="_blank" rel="noopener">techdirt.com/2014/08/28/washington-law-enforcement-hides-stingray...</a></span>
+      </div>
+      <div class="source-entry" id="src-5">
+        <span class="source-num">[5]</span>
+        <span class="source-text">GovTech, &ldquo;FBI Agreement Requires Tacoma Police to Hide Surveillance Use&rdquo; (2014)<br><a href="https://www.govtech.com/public-safety/fbi-agreement-requires-tacoma-police-to-hide-surveillance-use.html" target="_blank" rel="noopener">govtech.com/public-safety/fbi-agreement-requires-tacoma-police...</a></span>
+      </div>
+      <div class="source-entry" id="src-12">
+        <span class="source-num">[12]</span>
+        <span class="source-text">Fox 13 Seattle, &ldquo;Tacoma to pay $50,000 for violating public records act&rdquo; (2017)<br><a href="https://www.fox13seattle.com/news/tacoma-to-pay-50000-for-violating-public-records-act" target="_blank" rel="noopener">fox13seattle.com/news/tacoma-to-pay-50000-for-violating-public-records-act</a></span>
+      </div>
+      <div class="source-entry" id="src-13">
+        <span class="source-num">[13]</span>
+        <span class="source-text">Fox 13 Seattle, &ldquo;Privacy concerns raised over Tacoma police using cell phone tracking system&rdquo; (2014)<br><a href="https://www.fox13seattle.com/news/privacy-concerns-raised-over-tacoma-police-using-cell-phone-tracking-system" target="_blank" rel="noopener">fox13seattle.com/news/privacy-concerns-raised-over-tacoma-police...</a></span>
+      </div>
+      <div class="source-entry" id="src-14">
+        <span class="source-num">[14]</span>
+        <span class="source-text">Tacoma News Tribune (referenced via Techdirt Aug 2014 coverage)<br><a href="https://www.techdirt.com/2014/08/28/washington-law-enforcement-hides-stingray-purchase-use-everyone-its-ok-because-theyre-fighting-crime/" target="_blank" rel="noopener">techdirt.com/2014/08/28/washington-law-enforcement-hides-stingray...</a></span>
+      </div>
+      <div class="source-entry" id="src-15">
+        <span class="source-num">[15]</span>
+        <span class="source-text">Techdirt, &ldquo;City Of Tacoma To Pay $50,000 To Privacy Activist&rdquo; (Mar 2017)<br><a href="https://www.techdirt.com/2017/03/15/city-tacoma-to-pay-50000-to-privacy-activist-over-redacting-fbis-stingray-non-disclosure-agreement/" target="_blank" rel="noopener">techdirt.com/2017/03/15/city-tacoma-to-pay-50000-to-privacy-activist...</a></span>
+      </div>
+    </div>
+
+    <div class="source-category">
+      <h3>Civil Liberties Organizations</h3>
+      <div class="source-entry" id="src-3">
+        <span class="source-num">[3]</span>
+        <span class="source-text">ACLU-WA, &ldquo;Washington Becomes a Leader in Restricting Use of Invasive Stingrays&rdquo; (May 2015)<br><a href="https://www.aclu-wa.org/blog/washington-becomes-leader-restricting-use-invasive-stingrays" target="_blank" rel="noopener">aclu-wa.org/blog/washington-becomes-leader-restricting-use-invasive-stingrays</a></span>
+      </div>
+      <div class="source-entry" id="src-7">
+        <span class="source-num">[7]</span>
+        <span class="source-text">ACLU, &ldquo;Police Citing &lsquo;Terrorism&rsquo; to Buy Stingrays Used Only for Ordinary Crimes&rdquo;<br><a href="https://www.aclu.org/news/privacy-technology/police-citing-terrorism-buy-stingrays-used-only" target="_blank" rel="noopener">aclu.org/news/privacy-technology/police-citing-terrorism-buy-stingrays-used-only</a></span>
+      </div>
+    </div>
+
+    <div class="source-category">
+      <h3>Policy Analysis and Research</h3>
+      <div class="source-entry" id="src-6">
+        <span class="source-num">[6]</span>
+        <span class="source-text">Privacy SOS, &ldquo;Tacoma Police Department uses Stingray cell-phone sniffers, contracts with Verint&rdquo;<br><a href="https://privacysos.org/blog/police-are-using-a-powerful-surveillance-tool-to-fight-the-war-on-drugs-not-terrorism/" target="_blank" rel="noopener">privacysos.org/blog/police-are-using-a-powerful-surveillance-tool...</a></span>
+      </div>
+      <div class="source-entry" id="src-10">
+        <span class="source-num">[10]</span>
+        <span class="source-text">Privacy SOS, &ldquo;Police are using a powerful surveillance tool to fight the war on drugs, not terrorism&rdquo;<br><a href="https://privacysos.org/blog/police-are-using-a-powerful-surveillance-tool-to-fight-the-war-on-drugs-not-terrorism/" target="_blank" rel="noopener">privacysos.org/blog/police-are-using-a-powerful-surveillance-tool...</a></span>
+      </div>
+      <div class="source-entry" id="src-17">
+        <span class="source-num">[17]</span>
+        <span class="source-text">Cato Institute, &ldquo;Stingray: A New Frontier in Police Surveillance&rdquo; (policy analysis)<br><a href="https://www.cato.org/policy-analysis/stingray-new-frontier-police-surveillance" target="_blank" rel="noopener">cato.org/policy-analysis/stingray-new-frontier-police-surveillance</a></span>
+      </div>
+      <div class="source-entry" id="src-18">
+        <span class="source-num">[18]</span>
+        <span class="source-text">University of Washington, &ldquo;Catching the IMSI-catchers: SeaGlass brings transparency to cell phone surveillance&rdquo; (Jun 2017)<br><a href="https://www.washington.edu/news/2017/06/02/catching-the-imsi-catchers-seaglass-brings-transparency-to-cell-phone-surveillance/" target="_blank" rel="noopener">washington.edu/news/2017/06/02/catching-the-imsi-catchers...</a></span>
+      </div>
+    </div>
+
+    <div class="source-category">
+      <h3>Additional Resources</h3>
+      <div class="source-entry">
+        <span class="source-num"></span>
+        <span class="source-text">MuckRock, &ldquo;Before they could track cell phone data, police had to sign a NDA with the FBI&rdquo; (Sep 2014)<br><a href="https://www.muckrock.com/news/archives/2014/sep/22/they-could-track-cell-phone-data-police-had-sign-n/" target="_blank" rel="noopener">muckrock.com/news/archives/2014/sep/22/...</a></span>
+      </div>
+      <div class="source-entry">
+        <span class="source-num"></span>
+        <span class="source-text">ACLU-WA, <em>Banks v. City of Tacoma</em> case page<br><a href="https://www.aclu-wa.org/cases/banks-v-city-tacoma/" target="_blank" rel="noopener">aclu-wa.org/cases/banks-v-city-tacoma/</a></span>
+      </div>
+      <div class="source-entry">
+        <span class="source-num"></span>
+        <span class="source-text">ACLU-WA, &ldquo;Washington&rsquo;s Surveillance Complex&rdquo; overview<br><a href="https://www.aclu-wa.org/washingtons-surveillance-complex/" target="_blank" rel="noopener">aclu-wa.org/washingtons-surveillance-complex/</a></span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<footer class="report-footer">
+  <p>This report was produced using open-source intelligence methods. All information is derived from publicly available records, court filings, legislative records, and published journalism. No classified, privileged, or non-public information was used in its preparation.</p>
+  <div class="footer-links">
+    <a href="https://wasurveillancewatch.org">wasurveillancewatch.org</a>
+    <span style="color: #404040;">|</span>
+    <a href="mailto:wasurveillancewatch@proton.me">wasurveillancewatch@proton.me</a>
+    <span style="color: #404040;">|</span>
+    <a href="https://github.com/jeff-is-working/surveillance-watch/issues/new" target="_blank" rel="noopener">Report an Issue</a>
+  </div>
+  <p style="font-size: 0.7rem; color: #525252;">WA Surveillance Watch is a public transparency project. For corrections or additional sourcing, contact the research team.</p>
+</footer>
+
+</body>
+</html>

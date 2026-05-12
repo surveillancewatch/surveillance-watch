@@ -18,6 +18,7 @@ export default function HeroSection({ scrollToSection, setShowWizard }) {
           <button onClick={() => scrollToSection('problem')} className="hover:text-blue-300 transition">The Issue</button>
           <button onClick={() => scrollToSection('surveillance-tech')} className="hover:text-blue-300 transition">Surveillance Tech</button>
           <button onClick={() => scrollToSection('victory')} className="hover:text-blue-300 transition">Recent Victory</button>
+          <a href="/tacoma-stingray-report.html" className="hover:text-blue-300 transition">Reports</a>
           <button onClick={() => scrollToSection('action')} className="hover:text-blue-300 transition">Take Action</button>
           <button onClick={() => scrollToSection('resources')} className="hover:text-blue-300 transition">Resources</button>
         </div>

@@ -40,18 +40,24 @@ export const SURVEILLANCE_TECHNOLOGIES = [
     color: 'orange',
     tagline: 'Fake cell towers that intercept your phone communications',
     description:
-      'Cell-site simulators (brand name "Stingray") mimic cell towers to force nearby phones to connect, revealing location data and potentially intercepting communications of everyone in the area — not just suspects. The EFF\'s RayHunter project is building open-source tools to detect these devices.',
+      'Cell-site simulators (brand name "Stingray") mimic cell towers to force nearby phones to connect, revealing location data and potentially intercepting communications of everyone in the area — not just suspects. Tacoma PD secretly operated StingRay devices from 2008-2014, funded by DHS grants and hidden under FBI non-disclosure agreements. The program was used 179+ times — almost entirely for drug cases, never for its stated counter-terrorism purpose. The scandal cost Tacoma taxpayers over $361,000 in public records penalties and prompted Washington\'s landmark cell-site simulator warrant law.',
     whyItMatters: [
       'Captures data from ALL phones in range, not just targets',
-      'Often used without warrants under NDA with manufacturers',
-      'Disrupts cell service for everyone nearby',
-      'Federal agencies push secrecy agreements on local police',
+      'FBI NDAs required Tacoma PD to drop cases rather than reveal StingRay use in court',
+      'Tacoma\'s device was deployed 179+ times without judges knowing what they were authorizing',
+      'UW SeaGlass detected suspicious IMSI-catcher signals near USCIS and Sea-Tac Airport',
     ],
     keyPlayers: [
-      'Harris Corporation (Stingray/KingFish)',
+      'Harris/L3Harris (StingRay/KingFish/Hailstorm)',
       'Digital Receiver Technology (DRTBox)',
+      'Verint Systems (SkyLock)',
+      'Octasic/Nyxcell',
     ],
     links: [
+      {
+        label: 'Full Report: Tacoma StingRay Program',
+        url: '/tacoma-stingray-report.html',
+      },
       {
         label: 'EFF RayHunter Project',
         url: 'https://www.eff.org/deeplinks/2025/03/introducing-rayhunter',
@@ -60,9 +66,13 @@ export const SURVEILLANCE_TECHNOLOGIES = [
         label: 'ACLU: Stingray Tracking Devices',
         url: 'https://www.aclu.org/issues/privacy-technology/surveillance-technologies/stingray-tracking-devices',
       },
+      {
+        label: 'EFF Atlas of Surveillance: Tacoma PD',
+        url: 'https://atlasofsurveillance.org/search?agency=Tacoma+Police+Department',
+      },
     ],
     waSpecific:
-      'Washington State requires warrants for cell-site simulator use under RCW 9.73, but enforcement and transparency remain concerns.',
+      'Tacoma PD is the only confirmed WA agency with documented StingRay possession (2008-present). Washington requires warrants under HB 1440 (RCW 9.73, signed May 11, 2015), with the nation\'s first data-deletion mandate for bystander data. Seattle PD has not acknowledged possession, but UW researchers detected anomalies consistent with IMSI-catcher activity in the Seattle-Tacoma corridor.',
   },
   {
     id: 'alpr-networks',
