@@ -18,7 +18,19 @@ export default function HeroSection({ scrollToSection, setShowWizard }) {
           <button onClick={() => scrollToSection('problem')} className="hover:text-blue-300 transition">The Issue</button>
           <button onClick={() => scrollToSection('surveillance-tech')} className="hover:text-blue-300 transition">Surveillance Tech</button>
           <button onClick={() => scrollToSection('victory')} className="hover:text-blue-300 transition">Recent Victory</button>
-          <a href="/tacoma-stingray-report.html" className="hover:text-blue-300 transition">Reports</a>
+          <div className="relative group">
+            <button className="hover:text-blue-300 transition">Reports</button>
+            <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <a href="/tacoma-stingray-report.html" className="block px-4 py-3 hover:bg-slate-700 rounded-t-lg transition text-sm">
+                <div className="font-semibold text-white">Tacoma StingRay Program</div>
+                <div className="text-gray-400 text-xs mt-1">Cell-site simulator scandal &amp; cover-up</div>
+              </a>
+              <a href="/seaglass-imsi-detection-report.html" className="block px-4 py-3 hover:bg-slate-700 rounded-b-lg transition text-sm">
+                <div className="font-semibold text-white">UW SeaGlass Project</div>
+                <div className="text-gray-400 text-xs mt-1">IMSI catcher detection research</div>
+              </a>
+            </div>
+          </div>
           <button onClick={() => scrollToSection('action')} className="hover:text-blue-300 transition">Take Action</button>
           <button onClick={() => scrollToSection('resources')} className="hover:text-blue-300 transition">Resources</button>
         </div>

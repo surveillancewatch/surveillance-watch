@@ -59,6 +59,10 @@ export const SURVEILLANCE_TECHNOLOGIES = [
         url: '/tacoma-stingray-report.html',
       },
       {
+        label: 'Full Report: UW SeaGlass IMSI Detection',
+        url: '/seaglass-imsi-detection-report.html',
+      },
+      {
         label: 'EFF RayHunter Project',
         url: 'https://www.eff.org/deeplinks/2025/03/introducing-rayhunter',
       },

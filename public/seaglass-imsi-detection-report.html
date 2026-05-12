@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SeaGlass: Detecting Cell-Site Simulators in the Puget Sound - WA Surveillance Watch</title>
+  <meta name="description" content="Deep dive on the University of Washington SeaGlass project that detected IMSI catcher anomalies near a DHS immigration facility and Sea-Tac Airport, plus the tools civilians can use today.">
+  <meta name="keywords" content="SeaGlass, IMSI catcher, cell-site simulator, stingray, detection, University of Washington, RayHunter, EFF, Tukwila, USCIS, Sea-Tac, surveillance">
+  <meta property="og:title" content="SeaGlass: Detecting Cell-Site Simulators in the Puget Sound">
+  <meta property="og:description" content="How UW researchers used $500 sensors in rideshare vehicles to map suspicious cellular activity near a DHS facility and Sea-Tac Airport -- and what you can do about it today.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="WA Surveillance Watch">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #1a1a1a;
+      --bg-callout: #1c1917;
+      --text-primary: #e5e5e5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #737373;
+      --accent-red: #ef4444;
+      --accent-red-dim: #991b1b;
+      --accent-blue: #60a5fa;
+      --accent-blue-hover: #93bbfd;
+      --accent-amber: #f59e0b;
+      --accent-green: #22c55e;
+      --accent-green-dim: #166534;
+      --border: #262626;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+    a { color: var(--accent-blue); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--accent-blue-hover); text-decoration: underline; }
+    .site-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; }
+    .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .nav-brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); text-decoration: none; }
+    .nav-brand:hover { color: var(--text-primary); text-decoration: none; }
+    .nav-links { display: flex; gap: 1.25rem; font-size: 0.85rem; }
+    .nav-links a { color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--accent-blue); text-decoration: none; }
+    .hero { position: relative; overflow: hidden; padding: 4rem 1.5rem 3rem; background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, transparent 40%), linear-gradient(225deg, rgba(96,165,250,0.1) 0%, transparent 40%), var(--bg-primary); }
+    .hero-inner { max-width: 900px; margin: 0 auto; }
+    .hero-badge { display: inline-block; background: var(--accent-green); color: #000; padding: 0.35rem 1rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1.25rem; }
+    .hero h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+    .hero-subtitle { font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.85rem; color: var(--text-muted); }
+    .hero-meta span { display: flex; align-items: center; gap: 0.35rem; }
+    .content-wrap { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    .methodology-note { background: var(--bg-callout); border-left: 4px solid var(--accent-amber); padding: 1rem 1.25rem; margin-bottom: 2.5rem; border-radius: 0 6px 6px 0; font-size: 0.9rem; color: var(--text-secondary); }
+    .methodology-note strong { color: var(--accent-amber); }
+    .toc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem 2rem; margin-bottom: 3rem; }
+    .toc h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; }
+    .toc ol { list-style: none; counter-reset: toc-counter; padding: 0; }
+    .toc li { counter-increment: toc-counter; margin-bottom: 0.4rem; }
+    .toc li::before { content: counter(toc-counter) "."; color: var(--accent-green); font-weight: 600; margin-right: 0.5rem; font-size: 0.85rem; }
+    .toc a { font-size: 0.95rem; }
+    .report-section { margin-bottom: 3rem; scroll-margin-top: 4rem; }
+    .report-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--accent-green-dim); }
+    .report-section h3 { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); margin: 1.5rem 0 0.75rem; }
+    .report-section p { margin-bottom: 1rem; color: var(--text-secondary); }
+    .report-section ul, .report-section ol { margin: 0.5rem 0 1.25rem 1.25rem; color: var(--text-secondary); }
+    .report-section li { margin-bottom: 0.5rem; }
+    .report-section li strong { color: var(--text-primary); }
+    .report-section blockquote { background: var(--bg-card); border-left: 3px solid var(--accent-blue); padding: 0.85rem 1.25rem; margin: 1rem 0 1.25rem; border-radius: 0 6px 6px 0; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; }
+    .key-finding { background: rgba(239,68,68,0.08); border: 1px solid var(--accent-red-dim); border-radius: 8px; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+    .key-finding strong { color: var(--accent-red); }
+    .key-finding p { color: var(--text-secondary); margin-bottom: 0; }
+    .action-callout { background: rgba(34,197,94,0.08); border: 1px solid var(--accent-green-dim); border-radius: 8px; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+    .action-callout strong { color: var(--accent-green); }
+    .action-callout p { color: var(--text-secondary); margin-bottom: 0; }
+    .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); border-radius: 8px; overflow: hidden; }
+    thead { background: var(--bg-secondary); }
+    th { text-align: left; padding: 0.75rem 1rem; font-weight: 600; color: var(--text-primary); border-bottom: 2px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    tr:last-child td { border-bottom: none; }
+    td strong { color: var(--text-primary); }
+    .cite { font-size: 0.75rem; vertical-align: super; color: var(--accent-blue); cursor: pointer; font-weight: 600; }
+    .cite:hover { text-decoration: underline; }
+    .status-active { display: inline-block; background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-archived { display: inline-block; background: rgba(163,163,163,0.15); color: #a3a3a3; border: 1px solid rgba(163,163,163,0.3); padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-dormant { display: inline-block; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-research { display: inline-block; background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .hw-spec { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1rem 0 1.5rem; }
+    .hw-spec h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-green); margin-bottom: 0.75rem; }
+    .hw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; }
+    .hw-item { display: flex; justify-content: space-between; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+    .hw-item:last-child { border-bottom: none; }
+    .hw-label { color: var(--text-secondary); }
+    .hw-cost { color: var(--accent-green); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .related-report { background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.03)); border: 1px solid var(--accent-red-dim); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; display: flex; align-items: center; gap: 1rem; }
+    .related-report svg { flex-shrink: 0; }
+    .related-report .related-text { flex: 1; }
+    .related-report .related-title { font-weight: 700; color: var(--text-primary); font-size: 0.95rem; }
+    .related-report .related-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem; }
+    .source-category { margin-bottom: 2rem; }
+    .source-category h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-green); margin-bottom: 0.75rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+    .source-entry { display: grid; grid-template-columns: 2rem 1fr; gap: 0.5rem; margin-bottom: 0.6rem; font-size: 0.9rem; align-items: baseline; }
+    .source-num { color: var(--accent-green); font-weight: 700; font-size: 0.8rem; }
+    .source-text { color: var(--text-secondary); }
+    .source-text a { word-break: break-all; }
+    .report-footer { background: #000; padding: 2rem 1.5rem; text-align: center; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border); }
+    .report-footer p { margin-bottom: 0.75rem; }
+    .report-footer a { color: var(--accent-blue); }
+    .footer-links { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    @media print { body { background: #fff; color: #111; font-size: 11pt; } .site-nav, .hero-badge { display: none; } .hero { background: none; padding: 1rem 0; } .hero h1 { color: #111; } .content-wrap { padding: 0; } a { color: #111; } .report-section h2 { border-bottom-color: #333; } table, th, td { border: 1px solid #ccc; } thead { background: #f5f5f5; } .toc, .methodology-note, .key-finding, .action-callout, blockquote { border-color: #999; background: #f9f9f9; } .report-footer { display: none; } .source-text a::after { content: " (" attr(href) ")"; font-size: 8pt; color: #666; } }
+    @media (max-width: 640px) { .nav-links { display: none; } .hero { padding: 2.5rem 1rem 2rem; } .content-wrap { padding: 1.5rem 1rem 3rem; } .hero-meta { gap: 0.75rem; flex-direction: column; } th, td { padding: 0.5rem 0.65rem; font-size: 0.8rem; } .hw-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a href="https://wasurveillancewatch.org" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      WA Surveillance Watch
+    </a>
+    <div class="nav-links">
+      <a href="#toc">Contents</a>
+      <a href="#findings">Findings</a>
+      <a href="#successors">Detection Tools</a>
+      <a href="#take-action">Take Action</a>
+      <a href="#sources">Sources</a>
+      <a href="/tacoma-stingray-report.html">Tacoma Report</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-badge">OSINT Research Report</span>
+    <h1>SeaGlass: Detecting Cell-Site Simulators in the Puget Sound</h1>
+    <p class="hero-subtitle">How UW researchers used $500 sensors in rideshare vehicles to find suspicious cellular activity near a federal immigration facility and Sea-Tac Airport &mdash; and the tools civilians can use to detect surveillance today.</p>
+    <div class="hero-meta">
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Published May 11, 2026</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> WA Surveillance Watch Research Team</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Open Source / Public Domain</span>
+    </div>
+  </div>
+</header>
+
+<main class="content-wrap">
+
+  <div class="methodology-note">
+    <strong>Source Methodology:</strong> This report is derived from the published academic paper, university press releases, vetted journalism, EFF publications, and public project repositories. No non-public information was used. All sources are cited inline and compiled in <a href="#sources">Appendix A</a>.
+  </div>
+
+  <a href="/tacoma-stingray-report.html" class="related-report" style="text-decoration:none;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <div class="related-text">
+      <div class="related-title">Related: Cell-Site Simulator Surveillance in Tacoma, Washington</div>
+      <div class="related-desc">Full report on the DHS-funded StingRay program that operated secretly from 2008&ndash;2014 in the same region SeaGlass was scanning.</div>
+    </div>
+  </a>
+
+  <section class="report-section"><h2>Executive Summary</h2>
+    <p>In 2016&ndash;2017, University of Washington researchers deployed a fleet of low-cost sensors in rideshare vehicles across Seattle and Milwaukee to detect cell-site simulators (IMSI catchers) &mdash; the same surveillance technology <a href="/tacoma-stingray-report.html">Tacoma PD secretly operated</a> just 30 miles south. The <strong>SeaGlass</strong> project proved that city-scale surveillance detection was feasible with $500 in off-the-shelf hardware, and found anomalies consistent with IMSI catcher activity near a <strong>DHS immigration services facility in Tukwila</strong> and <strong>Seattle-Tacoma International Airport</strong>.</p>
+    <p>Though SeaGlass itself is now dormant, it spawned a lineage of increasingly accessible detection tools. Today, the <strong>EFF&rsquo;s RayHunter</strong> lets anyone detect cell-site simulators with a $20 mobile hotspot. This report covers the original research, its findings, and the current state of civilian IMSI catcher detection.</p>
+  </section>
+
+  <div class="toc" id="toc"><h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#project">The SeaGlass Project</a></li>
+      <li><a href="#hardware">Sensor Architecture</a></li>
+      <li><a href="#methodology">Detection Methodology</a></li>
+      <li><a href="#findings">What They Found</a></li>
+      <li><a href="#retroactive">Retroactive Validation</a></li>
+      <li><a href="#responses">Agency Responses</a></li>
+      <li><a href="#successors">From SeaGlass to RayHunter: The Detection Lineage</a></li>
+      <li><a href="#state-of-art">Current State of the Art</a></li>
+      <li><a href="#legislation">Pending Legislation</a></li>
+      <li><a href="#take-action">What You Can Do</a></li>
+      <li><a href="#sources">Appendix A: Source Index</a></li>
+    </ol>
+  </div>
+
+  <section class="report-section" id="project"><h2>1. The SeaGlass Project</h2>
+    <p><strong>&ldquo;SeaGlass: Enabling City-Wide IMSI-Catcher Detection&rdquo;</strong> was published in the <em>Proceedings on Privacy Enhancing Technologies</em> (PoPETs), Volume 2017, Issue 3. The paper was authored by:</p>
+    <ul><li><strong>Peter Ney</strong> &mdash; Ph.D. student (co-lead; later moved to Google)</li><li><strong>Ian Smith</strong> &mdash; Research Scientist (co-lead; later moved to Google)</li><li><strong>Gabriel Cadamuro</strong> &mdash; Ph.D. student (statistical modeling)</li><li><strong>Tadayoshi Kohno</strong> &mdash; Professor, faculty PI (left UW in 2026 for Georgetown University)</li></ul>
+    <p>All four were at the <strong>UW Allen School of Computer Science &amp; Engineering</strong>, affiliated with the <strong>Security and Privacy Research Lab</strong> and the <strong>UW Tech Policy Lab</strong>.<a href="#src-1" class="cite">[1]</a><a href="#src-2" class="cite">[2]</a></p>
+    <p><strong>Funding:</strong> $35,000 <strong>Knight Foundation Prototype Fund</strong> grant (Knight News Challenge on Data, February 2016) and the Short-Dooley Professorship at UW.<a href="#src-3" class="cite">[3]</a></p>
+    <p><strong>Deployment:</strong> March&ndash;May 2016, <strong>15 rideshare vehicles</strong> (9 Seattle, 6 Milwaukee), ~2 months, drivers paid $25/week. Collected <strong>2.1 million cellular scans</strong>, mapped <strong>1,411 towers</strong> in Seattle and <strong>609</strong> in Milwaukee.<a href="#src-1" class="cite">[1]</a></p>
+  </section>
+
+  <section class="report-section" id="hardware"><h2>2. Sensor Architecture</h2>
+    <p>Each sensor cost <strong>$502</strong> in off-the-shelf parts &mdash; vs. <strong>$100,000+</strong> for a commercial cell surveyor (QRC Surveyor 500). A 10-sensor fleet: ~$6,220/year including data.<a href="#src-1" class="cite">[1]</a></p>
+    <div class="hw-spec"><h4>Sensor Bill of Materials ($502/unit)</h4>
+      <div class="hw-grid">
+        <div class="hw-item"><span class="hw-label">Telit GT-864 GSM modem</span><span class="hw-cost">$65</span></div>
+        <div class="hw-item"><span class="hw-label">External antenna</span><span class="hw-cost">$25</span></div>
+        <div class="hw-item"><span class="hw-label">Raspberry Pi 2B+</span><span class="hw-cost">$35</span></div>
+        <div class="hw-item"><span class="hw-label">GPS (GlobalSat BU-353)</span><span class="hw-cost">$30</span></div>
+        <div class="hw-item"><span class="hw-label">Bait phone (Moto-G + SnoopSnitch)</span><span class="hw-cost">$95</span></div>
+        <div class="hw-item"><span class="hw-label">4G hotspot + 3-month data</span><span class="hw-cost">$100</span></div>
+        <div class="hw-item"><span class="hw-label">DC/AC inverter</span><span class="hw-cost">$26</span></div>
+        <div class="hw-item"><span class="hw-label">Hub, cables, SD card, enclosure</span><span class="hw-cost">$126</span></div>
+      </div>
+    </div>
+    <p><strong>How it worked:</strong> The GSM modem scanned <strong>every 10 seconds</strong>, recording all base station frequencies, signal strengths, bit error rates, and 22+ BCCH properties at each GPS location. The Pi cached data locally and uploaded to a cloud database. The bait phone ran <strong>SnoopSnitch</strong> to independently log suspicious events like cipher downgrades and IMSI requests. Units packed into vehicle trunks with antenna near windows; auto-boot on ignition.<a href="#src-1" class="cite">[1]</a></p>
+    <p><strong>GSM only by design:</strong> While 4G IMSI catchers existed (Harris Hailstorm), GSM simulators were more prevalent and could attack 3G/4G phones via downgrade attacks. The architecture is generalizable to 3G/4G with appropriate modems.<a href="#src-1" class="cite">[1]</a></p>
+  </section>
+
+  <section class="report-section" id="methodology"><h2>3. Detection Methodology</h2>
+    <p>Five signatures, five detection methods:<a href="#src-1" class="cite">[1]</a></p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Signature</th><th>Detection Method</th><th>What It Catches</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Multi-location transmission</strong></td><td>Base station modeling (log-distance path loss)</td><td>Portable IMSI catchers moving while operating</td></tr>
+        <tr><td><strong>Impermanence</strong></td><td>Temporal filtering (7-day window)</td><td>Devices that appear briefly then power off</td></tr>
+        <tr><td><strong>Anomalous configuration</strong></td><td>BCCH outlier detection (22 properties)</td><td>Unusual broadcast parameters not matching carrier norms</td></tr>
+        <tr><td><strong>Geographic inconsistency</strong></td><td>Channel and LAC analysis</td><td>Frequencies or location codes mismatching local carrier</td></tr>
+        <tr><td><strong>Suspicious phone interaction</strong></td><td>Bait phone logs (SnoopSnitch)</td><td>Cipher downgrades, IMSI requests, silent SMS</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Validation:</strong> 100 synthetic CSS measurements injected at varying distances. At 4 km: <strong>~80% recall, ~70% precision</strong>. Below 1 km: near-zero recall (CSS hides in legitimate tower&rsquo;s signal envelope).<a href="#src-1" class="cite">[1]</a></p>
+  </section>
+
+  <section class="report-section" id="findings"><h2>4. What They Found</h2>
+    <p>Two compelling anomalies in greater Seattle:<a href="#src-1" class="cite">[1]</a><a href="#src-2" class="cite">[2]</a></p>
+    <h3>Anomaly 1: Near USCIS Building, Tukwila</h3>
+    <p>A tower near the <strong>USCIS (DHS immigration services) building</strong> transmitted on <strong>six different frequencies</strong> over two months:</p>
+    <ul><li><strong>96%</strong> of all towers broadcast on a single channel; remaining 4% used 2&ndash;3</li><li><strong>Five of six frequencies</strong> detectable only within <strong>~400 meters</strong> of the building</li><li>Primary channel measurable across 5 km</li></ul>
+    <p>Consistent with a <strong>stationary IMSI catcher operating from inside the building</strong>.<a href="#src-1" class="cite">[1]</a></p>
+    <h3>Anomaly 2: Sea-Tac Airport</h3>
+    <p>A single transient measurement with <strong>four simultaneously anomalous broadcast properties</strong>:</p>
+    <ul><li><strong>MSTXPWR = 7</strong> (normal: 0&ndash;5) &mdash; controls max phone transmit power</li><li><strong>T3212 = 66</strong> (normal: 9&ndash;10) &mdash; forces far more frequent location updates</li><li><strong>RXACCMIN = 18</strong> (normal: 0&ndash;12) &mdash; minimum signal level for cell access</li><li><strong>CRH = 1</strong> (normal: 2&ndash;4) &mdash; cell reselection hysteresis</li></ul>
+    <p>Same tower showed <strong>normal properties before and after</strong> &mdash; consistent with an intermittent CSS.<a href="#src-1" class="cite">[1]</a></p>
+    <div class="key-finding"><p><strong>Researcher caution:</strong> <em>&ldquo;Without access to ground truth, we cannot definitively classify these anomalies as cell-site simulators. That would require additional corroborating evidence.&rdquo;</em><a href="#src-1" class="cite">[1]</a></p></div>
+  </section>
+
+  <section class="report-section" id="retroactive"><h2>5. Retroactive Validation</h2>
+    <p>The Tukwila anomaly gained significance as ICE&rsquo;s CSS use was subsequently documented:</p>
+    <ul>
+      <li><strong>ACLU FOIA (2019):</strong> ICE deployed CSS at least <strong>466 times</strong> (2017&ndash;2019), with 223 by September 2017 &mdash; the same period SeaGlass was scanning<a href="#src-6" class="cite">[6]</a></li>
+      <li><strong>BuzzFeed:</strong> <strong>1,885+ ICE CSS deployments</strong> (2013&ndash;2017)<a href="#src-7" class="cite">[7]</a></li>
+      <li><strong>DHS Inspector General (2023):</strong> ICE agents <em>&ldquo;repeatedly disregarded the law requiring a warrant&rdquo;</em><a href="#src-8" class="cite">[8]</a></li>
+      <li><strong>ICE (May 2025):</strong> Spent <strong>$825,000</strong> on CSS-equipped surveillance vehicles<a href="#src-9" class="cite">[9]</a></li>
+      <li><strong>Portland (Oct 2025):</strong> Protesters near ICE facility reported fake cell tower signals<a href="#src-10" class="cite">[10]</a></li>
+    </ul>
+    <div class="key-finding"><p><strong>Key context:</strong> SeaGlass detected its anomaly near the Tukwila USCIS building during the same period ICE was later confirmed to have been deploying CSS hundreds of times nationally. The researchers couldn&rsquo;t prove it &mdash; but subsequent evidence strongly suggests they were right.</p></div>
+  </section>
+
+  <section class="report-section" id="responses"><h2>6. Agency Responses</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Agency</th><th>Response</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ICE</strong></td><td>&ldquo;Cell-site simulators are invaluable law enforcement tools.&rdquo; Did not address Tukwila.<a href="#src-4" class="cite">[4]</a></td></tr>
+        <tr><td><strong>DHS</strong></td><td>Declined to confirm or deny.</td></tr>
+        <tr><td><strong>Seattle PD</strong></td><td>Denied owning StingRay devices.</td></tr>
+        <tr><td><strong>Port of Seattle Police</strong></td><td>Denied owning StingRay devices.</td></tr>
+        <tr><td><strong>FBI</strong></td><td>Declined to comment.<a href="#src-4" class="cite">[4]</a></td></tr>
+      </tbody>
+    </table></div>
+    <p>No agency attempted to suppress the research.<a href="#src-4" class="cite">[4]</a></p>
+  </section>
+
+  <section class="report-section" id="successors"><h2>7. From SeaGlass to RayHunter: The Detection Lineage</h2>
+    <p>Each successor made detection cheaper and more accessible.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Project</th><th>Year</th><th>Status</th><th>Cost</th><th>Key Advance</th></tr></thead>
+      <tbody>
+        <tr><td><strong>AIMSICD</strong></td><td>2012</td><td><span class="status-dormant">Dormant</span></td><td>Free</td><td>First open-source attempt; never reliable on modern Android</td></tr>
+        <tr><td><strong>SnoopSnitch</strong></td><td>2014</td><td><span class="status-archived">Semi-maintained</span></td><td>Free</td><td>Detects fake base stations; requires rooted Qualcomm device</td></tr>
+        <tr><td><strong>SeaGlass</strong></td><td>2016&ndash;17</td><td><span class="status-archived">Dormant</span></td><td>$502/sensor</td><td>Proved city-scale crowdsourced detection feasible</td></tr>
+        <tr><td><strong>EFF Crocodile Hunter</strong></td><td>2020</td><td><span class="status-archived">Archived</span></td><td>~$200+</td><td>Extended to 4G/LTE via SDR; too complex for mass adoption</td></tr>
+        <tr><td><strong>FADe Project</strong></td><td>2019&ndash;22</td><td><span class="status-archived">Complete</span></td><td>Smartphone</td><td>9 countries, <strong>150+ IMSI catchers</strong> found (33 in Caracas alone)</td></tr>
+        <tr><td><strong>EFF RayHunter</strong></td><td>2025</td><td><span class="status-active">Active</span></td><td><strong>$20&ndash;30</strong></td><td>Validated vs. commercial CSS; suspicious activity at 2024 DNC</td></tr>
+        <tr><td><strong>Cape</strong></td><td>2024</td><td><span class="status-active">Active</span></td><td>MVNO fee</td><td>Active defense: IMSI rotation every 24h. TIME Best Inventions 2025</td></tr>
+        <tr><td><strong>Marlin</strong></td><td>2025</td><td><span class="status-research">Research</span></td><td>N/A</td><td>99.9% detection; first statistical proof at a public event (NDSS 2025)</td></tr>
+      </tbody>
+    </table></div>
+    <h3>EFF RayHunter: The Current Standard</h3>
+    <p>Released March 2025, RayHunter runs on cheap hotspots (primarily the <strong>Orbic RC400L</strong>, ~$20) and intercepts control-plane traffic in real time.<a href="#src-11" class="cite">[11]</a></p>
+    <p>Detects: <strong>2G downgrades</strong> (tower forces device from 4G to 2G), <strong>null ciphers</strong> (encryption disabled), and <strong>IMSI grabs</strong> (tower requests permanent identity without authentication).</p>
+    <p><strong>Field results (Sep 2025):</strong> Validated against commercial CSS &mdash; <strong>detected every attack</strong>. No CSS at US protests. <strong>Suspicious activity at 2024 DNC</strong> in Chicago (devices near delegate hotel switched to new tower, IMSI requested, then disconnected). Thousands of devices deployed; dozens of captures submitted.<a href="#src-11" class="cite">[11]</a><a href="#src-12" class="cite">[12]</a></p>
+    <h3>FADe Project: SeaGlass Goes Global</h3>
+    <p>The most direct descendant. Managed by South Lighthouse, funded by Open Technology Fund, with direct technical assistance from the UW SeaGlass team. Deployed in <strong>9 Latin American countries</strong>, scanned ~9,000 antennas, found <strong>150+ likely IMSI catchers</strong>.<a href="#src-13" class="cite">[13]</a></p>
+    <h3>Marlin: The Academic Frontier</h3>
+    <p>NDSS 2025. Identified <strong>53 messages</strong> an IMSI catcher must send to extract identities. <strong>99.9% detection rate</strong>, first statistically significant evidence (p &lt;&lt; 0.005) at a public event. Approach is &ldquo;causal, not correlated&rdquo; &mdash; detects what CSS <em>must</em> do, not just what they might look like.<a href="#src-14" class="cite">[14]</a></p>
+  </section>
+
+  <section class="report-section" id="state-of-art"><h2>8. Current State of the Art</h2>
+    <h3>For Civilians</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tool</th><th>Cost</th><th>Accessibility</th><th>Effectiveness</th></tr></thead>
+      <tbody>
+        <tr><td><strong>EFF RayHunter</strong></td><td>$20&ndash;30</td><td>High (buy hotspot, USB install)</td><td>Validated against commercial CSS</td></tr>
+        <tr><td><strong>Cape</strong> (MVNO)</td><td>Monthly sub</td><td>Medium (switch carriers)</td><td>Active defense &mdash; IMSI rotation</td></tr>
+        <tr><td><strong>SnoopSnitch</strong></td><td>Free</td><td>Low (rooted Qualcomm)</td><td>Good if compatible hardware</td></tr>
+        <tr><td><strong>Consumer apps</strong></td><td>Free/cheap</td><td>High</td><td>Limited &mdash; no baseband access</td></tr>
+      </tbody>
+    </table></div>
+    <h3>For Enterprises</h3>
+    <ul><li><strong>ESD Overwatch / CryptoPhone</strong> &mdash; strategic real-time detection; enterprise pricing</li><li><strong>GSMK CryptoPhone CP700</strong> &mdash; built-in baseband firewall (~$3,500/unit)</li><li><strong>Bastille Networks</strong> &mdash; facility RF monitoring, 100 kHz&ndash;6 GHz</li></ul>
+    <div class="key-finding"><p><strong>Fundamental limitation:</strong> All tools detect only <strong>active</strong> IMSI catchers that transmit signals. <strong>Passive</strong> IMSI catchers that only listen are undetectable because they emit nothing.</p></div>
+  </section>
+
+  <section class="report-section" id="legislation"><h2>9. Pending Legislation</h2>
+    <h3>Federal: Cell-Site Simulator Warrant Act of 2025</h3>
+    <p><strong>H.R.4811 / S.2522</strong> (119th Congress, bipartisan):<a href="#src-15" class="cite">[15]</a></p>
+    <ul><li>Require <strong>warrants</strong> for all government CSS use</li><li>Limit operation to <strong>30 days</strong></li><li>Require <strong>FCC-certified testing lab certification</strong></li><li>Mandate <strong>disclosure at constitutionally protected gatherings</strong></li></ul>
+    <h3>Washington State</h3>
+    <p><strong>HB 1440</strong> (signed May 11, 2015) requires probable cause warrants, data deletion for bystanders, and judicial education. <a href="/tacoma-stingray-report.html">Full details in our Tacoma report.</a></p>
+    <h3>Seattle Surveillance Ordinance</h3>
+    <p><strong>SMC 14.18</strong> (July 2017) requires council approval before any city department acquires surveillance technology. The ACLU-WA called it &ldquo;the nation&rsquo;s strongest.&rdquo;<a href="#src-16" class="cite">[16]</a></p>
+  </section>
+
+  <section class="report-section" id="take-action"><h2>10. What You Can Do</h2>
+    <div class="action-callout"><p><strong>Detect:</strong> Install <a href="https://github.com/EFForg/rayhunter">EFF RayHunter</a> on a supported hotspot ($20&ndash;30). Submit any detections to EFF for analysis.</p></div>
+    <div class="action-callout"><p><strong>Request records:</strong> File public records requests with your local police asking about CSS acquisition, use, FBI NDAs, and Harris Corporation contracts. <a href="https://wasurveillancewatch.org">WA Surveillance Watch</a> provides free templates.</p></div>
+    <div class="action-callout"><p><strong>Support legislation:</strong> Urge representatives to support the <strong>Cell-Site Simulator Warrant Act</strong> (H.R.4811 / S.2522). Push for compliance audits of WA&rsquo;s HB 1440.</p></div>
+    <div class="action-callout"><p><strong>Monitor:</strong> Carry a RayHunter hotspot at public demonstrations. Continued monitoring builds the evidence base.</p></div>
+  </section>
+
+  <section class="report-section" id="sources"><h2>Appendix A: Source Index</h2>
+    <p>All sources publicly available. URLs verified May 11, 2026.</p>
+    <div class="source-category"><h3>Academic Papers</h3>
+      <div class="source-entry" id="src-1"><span class="source-num">[1]</span><span class="source-text">Ney, Smith, Cadamuro, Kohno. &ldquo;SeaGlass: Enabling City-Wide IMSI-Catcher Detection.&rdquo; PoPETs 2017, Vol. 3, pp. 39&ndash;56.<br><a href="https://homes.cs.washington.edu/~yoshi/papers/seaglass-imsi-catcher-2017.pdf" target="_blank" rel="noopener">homes.cs.washington.edu/~yoshi/papers/seaglass-imsi-catcher-2017.pdf</a></span></div>
+      <div class="source-entry" id="src-14"><span class="source-num">[14]</span><span class="source-text">Tucker et al. &ldquo;Detecting IMSI-Catchers by Characterizing Identity Exposing Messages.&rdquo; NDSS 2025.<br><a href="https://www.ndss-symposium.org/ndss-paper/detecting-imsi-catchers-by-characterizing-identity-exposing-messages-in-cellular-traffic/" target="_blank" rel="noopener">ndss-symposium.org/ndss-paper/detecting-imsi-catchers...</a></span></div>
+    </div>
+    <div class="source-category"><h3>University and Project Sources</h3>
+      <div class="source-entry" id="src-2"><span class="source-num">[2]</span><span class="source-text">UW News, &ldquo;Catching the IMSI-catchers&rdquo; (Jun 2017)<br><a href="https://www.washington.edu/news/2017/06/02/catching-the-imsi-catchers-seaglass-brings-transparency-to-cell-phone-surveillance/" target="_blank" rel="noopener">washington.edu/news/2017/06/02/catching-the-imsi-catchers...</a></span></div>
+      <div class="source-entry" id="src-3"><span class="source-num">[3]</span><span class="source-text">Knight Foundation, News Challenge on Data (Feb 2016)<br><a href="https://legacy.knightfoundation.org/articles/17-ideas-win-knight-news-challenge-data/" target="_blank" rel="noopener">legacy.knightfoundation.org/articles/17-ideas-win-knight-news-challenge-data/</a></span></div>
+      <div class="source-entry" id="src-5"><span class="source-num">[5]</span><span class="source-text">SeaGlass GitHub repository<br><a href="https://github.com/seaglass-project/seaglass" target="_blank" rel="noopener">github.com/seaglass-project/seaglass</a></span></div>
+    </div>
+    <div class="source-category"><h3>Journalism</h3>
+      <div class="source-entry" id="src-4"><span class="source-num">[4]</span><span class="source-text">KOMO News, &ldquo;UW researchers develop device to detect fake cell towers&rdquo; (Jun 2017)<br><a href="https://komonews.com/news/local/uw-researchers-develop-device-to-detect-fake-cell-towers-that-can-spy-on-your-phone" target="_blank" rel="noopener">komonews.com/news/local/uw-researchers-develop-device...</a></span></div>
+      <div class="source-entry" id="src-7"><span class="source-num">[7]</span><span class="source-text">TechCrunch, &ldquo;Who catches the IMSI catchers?&rdquo; (Jun 2017)<br><a href="https://techcrunch.com/2017/06/02/who-catches-the-imsi-catchers-researchers-demonstrate-stingray-detection-kit/" target="_blank" rel="noopener">techcrunch.com/2017/06/02/who-catches-the-imsi-catchers...</a></span></div>
+      <div class="source-entry" id="src-9"><span class="source-num">[9]</span><span class="source-text">TechCrunch, &ldquo;ICE bought vehicles equipped with fake cell towers&rdquo; (Oct 2025)<br><a href="https://techcrunch.com/2025/10/07/ice-bought-vehicles-equipped-with-fake-cell-towers-to-spy-on-phones/" target="_blank" rel="noopener">techcrunch.com/2025/10/07/ice-bought-vehicles-equipped...</a></span></div>
+      <div class="source-entry" id="src-10"><span class="source-num">[10]</span><span class="source-text">OPB, &ldquo;Portland ICE protesters reported fake cell tower signals&rdquo; (Oct 2025)<br><a href="https://www.opb.org/article/2025/10/15/portland-ice-protesters-reported-fake-cell-tower/" target="_blank" rel="noopener">opb.org/article/2025/10/15/portland-ice-protesters...</a></span></div>
+    </div>
+    <div class="source-category"><h3>Civil Liberties and Policy</h3>
+      <div class="source-entry" id="src-6"><span class="source-num">[6]</span><span class="source-text">ACLU, &ldquo;ICE Records Confirm Invasive Cell-Phone Surveillance&rdquo; (Dec 2019)<br><a href="https://www.aclu.org/news/immigrants-rights/ice-records-confirm-that-immigration-enforcement-agencies-are-using-invasive-cell-phone-surveillance-devices" target="_blank" rel="noopener">aclu.org/news/immigrants-rights/ice-records-confirm...</a></span></div>
+      <div class="source-entry" id="src-8"><span class="source-num">[8]</span><span class="source-text">EPIC, &ldquo;DHS OIG: ICE Illegally Used Cell-Site Simulators&rdquo; (2023)<br><a href="https://epic.org/dhs-oig-report-secret-service-and-ice-illegally-used-cell-site-simulators/" target="_blank" rel="noopener">epic.org/dhs-oig-report-secret-service-and-ice...</a></span></div>
+      <div class="source-entry" id="src-15"><span class="source-num">[15]</span><span class="source-text">POGO, &ldquo;Cell-Site Simulator Warrant Act&rdquo; issue brief<br><a href="https://www.pogo.org/fact-sheets/issue-brief-the-cell-site-simulator-warrant-act" target="_blank" rel="noopener">pogo.org/fact-sheets/issue-brief-the-cell-site-simulator-warrant-act</a></span></div>
+      <div class="source-entry" id="src-16"><span class="source-num">[16]</span><span class="source-text">Seattle City Council, surveillance technology ordinance (Jul 2017)<br><a href="https://council.seattle.gov/2017/07/31/council-approves-strongest-in-nation-surveillance-technology-transparency-ordinance/" target="_blank" rel="noopener">council.seattle.gov/2017/07/31/council-approves-strongest...</a></span></div>
+    </div>
+    <div class="source-category"><h3>Detection Tools</h3>
+      <div class="source-entry" id="src-11"><span class="source-num">[11]</span><span class="source-text">EFF, &ldquo;Meet RayHunter&rdquo; (Mar 2025)<br><a href="https://www.eff.org/deeplinks/2025/03/meet-rayhunter-new-open-source-tool-eff-detect-cellular-spying" target="_blank" rel="noopener">eff.org/deeplinks/2025/03/meet-rayhunter...</a></span></div>
+      <div class="source-entry" id="src-12"><span class="source-num">[12]</span><span class="source-text">EFF, &ldquo;RayHunter: What We Have Found So Far&rdquo; (Sep 2025)<br><a href="https://www.eff.org/deeplinks/2025/09/rayhunter-what-we-have-found-so-far" target="_blank" rel="noopener">eff.org/deeplinks/2025/09/rayhunter-what-we-have-found-so-far</a></span></div>
+      <div class="source-entry" id="src-13"><span class="source-num">[13]</span><span class="source-text">FADe Project (Fake Antenna Detection)<br><a href="https://fadeproject.org/" target="_blank" rel="noopener">fadeproject.org</a></span></div>
+    </div>
+    <div class="source-category"><h3>Additional Resources</h3>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">SeaGlass project website &mdash; <a href="https://seaglass.cs.washington.edu/" target="_blank" rel="noopener">seaglass.cs.washington.edu</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">EFF RayHunter GitHub &mdash; <a href="https://github.com/EFForg/rayhunter" target="_blank" rel="noopener">github.com/EFForg/rayhunter</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">EFF Crocodile Hunter (archived) &mdash; <a href="https://github.com/EFForg/crocodilehunter" target="_blank" rel="noopener">github.com/EFForg/crocodilehunter</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">Cape MVNO &mdash; <a href="https://www.cape.co/" target="_blank" rel="noopener">cape.co</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">EFF Street Level Surveillance: CSS &mdash; <a href="https://sls.eff.org/technologies/cell-site-simulators-imsi-catchers" target="_blank" rel="noopener">sls.eff.org/technologies/cell-site-simulators-imsi-catchers</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">SeaGlass assembly guide (Zenodo, 2018) &mdash; <a href="https://zenodo.org/records/1309994" target="_blank" rel="noopener">zenodo.org/records/1309994</a></span></div>
+      <div class="source-entry"><span class="source-num"></span><span class="source-text">Bruce Schneier on SeaGlass (Aug 2017) &mdash; <a href="https://www.schneier.com/blog/archives/2017/08/detecting_sting.html" target="_blank" rel="noopener">schneier.com/blog/archives/2017/08/detecting_sting.html</a></span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="report-footer">
+  <p>This report was produced using open-source intelligence methods. All information is derived from published academic papers, university records, government documents, and vetted journalism. No classified, privileged, or non-public information was used.</p>
+  <div class="footer-links">
+    <a href="https://wasurveillancewatch.org">wasurveillancewatch.org</a>
+    <span style="color:#404040;">|</span>
+    <a href="mailto:wasurveillancewatch@proton.me">wasurveillancewatch@proton.me</a>
+    <span style="color:#404040;">|</span>
+    <a href="/tacoma-stingray-report.html">Tacoma StingRay Report</a>
+    <span style="color:#404040;">|</span>
+    <a href="https://github.com/jeff-is-working/surveillance-watch/issues/new" target="_blank" rel="noopener">Report an Issue</a>
+  </div>
+  <p style="font-size:0.7rem;color:#525252;">WA Surveillance Watch is a public transparency project. For corrections or additional sourcing, contact the research team.</p>
+</footer>
+
+</body>
+</html>
